@@ -9,6 +9,54 @@
 
 #include "types.h"
 
+class CircleDot : QObject {
+    Q_OBJECT
+public:
+    enum { Type = CircleType };
+    explicit CircleDot(QObject *parent) : QObject(parent), x0(0), y0(0), radius(0) {
+
+    }
+
+    explicit CircleDot(const int x, const int y, const int r)
+        : QObject(), x0(x), y0(y), radius(r) {
+        createCircle();
+    }
+    int type() const { return Type; }
+
+    QVector<QPair<int, int>> getPoints() const {
+        return points;
+    }
+private:
+    void createCircle() {
+        int x = radius;
+        int y = 0;
+        int radiusError = 1 - x;
+        while (x >= y) {
+             points.append(qMakePair(x + x0, y + y0));
+             points.append(qMakePair(y + x0, x + y0));
+             points.append(qMakePair(-x + x0, y + y0));
+             points.append(qMakePair(-y + x0, x + y0));
+             points.append(qMakePair(-x + x0, -y + y0));
+             points.append(qMakePair(-y + x0, -x + y0));
+             points.append(qMakePair(x + x0, -y + y0));
+             points.append(qMakePair(y + x0, -x + y0));
+
+            y++;
+            if(radiusError < 0) {
+                radiusError += 2 * y + 1;
+            } else {
+                x--;
+                radiusError += 2 * (y - x + 1);
+            }
+        }
+    }
+
+    int x0;
+    int y0;
+    int radius;
+    QVector<QPair<int, int>> points;
+};
+
 class Circle : public QObject, public QGraphicsEllipseItem {
     Q_OBJECT
 public:
@@ -73,7 +121,7 @@ private:
     }
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
         painter->setPen(*mPen);
-        painter->setBrush(Qt::green);
+        //painter->setBrush(Qt::green);
         painter->drawEllipse(mapRectFromScene(makeCircle()));
         Q_UNUSED(option);
         Q_UNUSED(widget);

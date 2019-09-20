@@ -6,7 +6,7 @@
 Scene::Scene(QObject *parent )
     : QGraphicsScene (parent)
 {
-    setSceneRect(QRectF(0, 0, 128, 64));
+    setSceneRect(QRectF(0, 0, 1280, 640));
     waitingPoint = false;
     targetItem = false;
     oneItemSelect = true;
@@ -14,7 +14,8 @@ Scene::Scene(QObject *parent )
     gridState = true;
     mode = Mode::Normal;
     //rubberBand = new QRubberBand(QRubberBand::Rectangle);
-    drawGrid();
+    //drawGrid();
+    drawPixMap();
     this->setItemIndexMethod(QGraphicsScene::NoIndex); // настраиваем индексацию элементов
     addItem(&selectArea);
 }
@@ -103,6 +104,8 @@ void Scene::inNormalMode(QGraphicsSceneMouseEvent *pe) {
                     break;
                 case LineType: qgraphicsitem_cast<Line*>(item)->setMouseEvent(pe);
                     break;
+                case TextType: qgraphicsitem_cast<TextItem*>(item)->setMouseEvent(pe);
+                    break;
                 }
             }
         }
@@ -124,6 +127,7 @@ void Scene::inInputMode(QGraphicsSceneMouseEvent *pe) {
         pos = checkBind(pos);
     }
     pointsVec.append(pos);
+    emit getPointSignal(pos);
     waitingPoint = true;
     switch (m_type) {
     case ItemType::Point: drawPoint(); break;
@@ -157,19 +161,24 @@ void Scene::inSelectMode(QGraphicsSceneMouseEvent *pe) {        // Исполь�
 }
 
 void Scene::mousePressEvent(QGraphicsSceneMouseEvent *pe) {
-
+   // pointsVec.append(pe->scenePos());
+//    drawLine();
+    //drawPoint();
     switch (mode) {
     case Mode::Normal: inNormalMode(pe);
         /*foreach(auto item, this->items()) {
             if(item->type() == GridType) {
                 continue;
-            }
+            }*
 
             if(item->boundingRect().contains(pe->scenePos())) {
                 mode = Mode::Select;
                 inSelectMode(pe);
             }
-        }*/
+        }
+*/
+
+
         break;
     case Mode::Input: inInputMode(pe);
         break;
@@ -191,15 +200,23 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
                 selectArea.setMouseEvent(event);
                 continue;
             }
-            if(item->type() != GridType && item->type() != SelectType) {
+            auto type = item->type();
+            if(type == DotType) {
+                int d = 5;
+            }
+            if(item->type() != GridType && item->type() != SelectType && item->type() != DotType) {
                 if(item->boundingRect().contains(event->scenePos())) {
                     targetItem = true;
+                    //auto r = itemsBoundingRect();
+                    //addRect(r);
                     switch (m_type) {
                     case ItemType::Rect: qgraphicsitem_cast<RectItem*>(item)->setMouseEvent(event);
                         break;
                     case ItemType::Circle: qgraphicsitem_cast<CircleItem*>(item)->setMouseEvent(event);
                         break;
                     case ItemType::Line: qgraphicsitem_cast<Line*>(item)->setMouseEvent(event);
+                        break;
+                    case ItemType::Text: qgraphicsitem_cast<TextItem*>(item)->setMouseEvent(event);
                         break;
                     }
                 }
@@ -253,6 +270,7 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *pe) {
         QMessageBox::information(nullptr, "Внимание", "Завершите текущую операцию");
         return;
     }
+
     auto pos = pe->scenePos();
     auto items = this->items();
     foreach(auto item, items) {
@@ -285,33 +303,127 @@ void Scene::drawGrid() {
     }*/this->addItem(&grid);
 }
 
+void Scene::drawPixMap() {
+    map.setScene(this);
+    this->addItem(&map);
+    map.start();
+    update();
+}
+
 void Scene::drawText() {
-    this->addItem(new Text(pointsVec.at(0)));
+    if(tmpText.isEmpty()) {
+        waitingPoint = false;
+        emit textPos();
+        return;
+    }
+    //Text text(this, pointsVec.at(0), "Text");
+    //this->addItem(new Text(pointsVec.at(0), tmpText));
+
+    TextItem item(pointsVec.at(0), "Text", "11");
+    this->addItem(&item);
     pointsVec.clear();
     waitingPoint = false;
+    emit endInputSignal();
+}
+
+void Scene::drawText(const QString &text, const QString &fontHeight) {
+    //Text t(this, pointsVec.at(0), text);
+
+    //this->addItem(new Text(pointsVec.at(0), text));
+    TextItem *textItem = new TextItem(pointsVec.at(0), text, fontHeight);
+    this->addItem(textItem);
+    pointsVec.clear();
+    waitingPoint = false;
+    emit endInputSignal();
+
+    auto r = textItem->boundingRect();
+    auto tl = r.topLeft();
+    auto w = r.width();
+    auto h = r.height();
+    int d = 5;
+}
+
+QPair<int, int> Scene::findDot(const QPointF &p) {
+    return map.findDot(p);
+}
+
+QRectF Scene::findPixRect(const QPointF &p) {
+
 }
 
 void Scene::drawPoint() {
    // auto point = new Point(pointsVec.at(0));
-    this->addItem(new Point(pointsVec.at(0)));
+    //this->addItem(new Point(pointsVec.at(0)));
+
+    auto xy = findDot(pointsVec.at(0));
+    auto r = findPixRect(pointsVec.at(0));
+    Dot *dot = new Dot(xy.first, xy.second, r.topLeft().x(), r.topLeft().y());
+    //map.addPoint(coords.first, coords.second);
+    this->addItem(dot);
     pointsVec.clear();
+    auto a = this->items();
+    dot->check();
     waitingPoint = false;
+    emit endInputSignal();
+    update();
 }
 
-void Scene::drawLine() {
+void Scene::slotAddPoint(const int x, const int y) {
+    map.addPoint(x, y);
+}
+
+/*void Scene::drawLine() {
     if(waitingPoint) {
         if(pointsVec.count() == 2) {
             Line *l = new Line(pointsVec.at(0), pointsVec.at(1));
             this->addItem(l);
             pointsVec.clear();
             waitingPoint = false;
+            emit endInputSignal();
+        } else {
+            waitingPoint = true;
+        }
+    }
+}
+*/
+void Scene::drawLine() {
+    if(waitingPoint) {
+        if(pointsVec.count() == 2) {
+            auto p1 = findDot(pointsVec.at(0));
+            auto p2 = findDot(pointsVec.at(1));
+            LineDot *line = new LineDot(p1.first, p1.second, p2.first, p2.second);
+            auto points = line->getLine();
+            map.addLine(points);
+            pointsVec.clear();
+            waitingPoint = false;
+            emit endInputSignal();
         } else {
             waitingPoint = true;
         }
     }
 }
 
-void Scene::drawCircle() {
+void Scene::drawDotLine() {
+    if(waitingPoint) {
+        if(pointsVec.count() == 2) {
+            //auto p1 = findDot(pointsVec.at(0));
+            //auto p2 = findDot(pointsVec.at(1));
+            LineDot *line = new LineDot(static_cast<int>(pointsVec.at(0).x()),
+                                        static_cast<int>(pointsVec.at(0).y()),
+                                        static_cast<int>(pointsVec.at(1).x()),
+                                        static_cast<int>(pointsVec.at(1).y()));
+            auto points = line->getLine();
+            map.addLine(points);
+            pointsVec.clear();
+            waitingPoint = false;
+            emit endInputSignal();
+        } else {
+            waitingPoint = true;
+        }
+    }
+}
+
+/*void Scene::drawCircle() {
     if(!waitingPoint) {
         return;
     }
@@ -322,6 +434,25 @@ void Scene::drawCircle() {
         this->addItem(c);
         pointsVec.clear();
         waitingPoint = false;
+        emit endInputSignal();
+    } else {
+        waitingPoint = true;
+    }
+}*/
+
+void Scene::drawCircle() {
+    if(!waitingPoint) {
+        return;
+    }
+
+    if(pointsVec.count() == 2) {
+        auto p1 = findDot(pointsVec.at(0));
+        auto p2 = findDot(pointsVec.at(1));
+        CircleDot *c = new CircleDot(p1.first, p1.second, p2.first - p1.first);
+        map.addLine(c->getPoints());
+        pointsVec.clear();
+        waitingPoint = false;
+        emit endInputSignal();
     } else {
         waitingPoint = true;
     }
@@ -337,6 +468,21 @@ void Scene::drawCircle(const double radius) {
     this->addItem(c);
     pointsVec.clear();
     waitingPoint = false;
+    emit endInputSignal();
+}
+
+void Scene::drawDotCircle(const int radiaus) {
+    if(!waitingPoint) {
+        return;
+    }
+
+    //auto p0 = findDot(pointsVec.at(0));
+    CircleDot *c = new CircleDot(static_cast<int>(pointsVec.at(0).x()),
+                                 static_cast<int>(pointsVec.at(0).y()), radiaus);
+    map.addLine(c->getPoints());
+    pointsVec.clear();
+    waitingPoint = false;
+    emit endInputSignal();
 }
 
 void Scene::drawRect() {
@@ -351,6 +497,7 @@ void Scene::drawRect() {
         this->addItem(r);
         pointsVec.clear();
         waitingPoint = false;
+        emit endInputSignal();
     } else {
         waitingPoint = true;
     }
@@ -369,6 +516,7 @@ void Scene::drawRect(const double width, const double height) {
     this->addItem(r);
     pointsVec.clear();
     waitingPoint = false;
+    emit endInputSignal();
 }
 
 void Scene::drawPolyline() {
@@ -411,10 +559,11 @@ void Scene::addShape(const QStringList &list) {
     pointsVec.clear();
     switch (m_type) {
     case ItemType::Point: setPointData(list); break;
-    case ItemType::Line: setLineData(list); break;
-    case ItemType::Circle: setCircleData(list); break;
+    case ItemType::Line: setLineDotData(list); break;
+    case ItemType::Circle: setCircleDotData(list); break;
     case ItemType::Rect: setRectData(list); break;
     case ItemType::Polyline: drawPolyline(); break;
+    case ItemType::Text: setTextData(list); break;
     }
 
     this->update();
@@ -440,6 +589,17 @@ void Scene::setLineData(const QStringList &data) {
         }
     }
     drawLine();
+}
+
+void Scene::setLineDotData(const QStringList &data) {
+    for(int i = 0; i < data.count(); i++) {
+        if(data.at(i) == "P1" || data.at(i) == "P2") {
+            int x = i + 1;
+            int y = i + 2;
+            pointsVec.append(QPointF(data.at(x).toInt(), data.at(y).toInt()));
+        }
+    }
+    drawDotLine();
 }
 
 void Scene::setRectData(const QStringList &data) {
@@ -493,12 +653,38 @@ void Scene::setCircleData(const QStringList &data) {
     }
 }
 
+void Scene::setCircleDotData(const QStringList &data) {
+    int radius = 0;
+        for(int i = 0; i < data.count(); i++) {
+            if(data.at(i) == "PO" || data.at(i) == "PR") {
+                int x = i + 1;
+                int y = i + 2;
+                if(data.at(x).isEmpty() || data.at(y).isEmpty()) {
+                    continue;
+                }
+                pointsVec.append(QPointF(data.at(x).toInt(), data.at(y).toInt()));
+            }
+            if(data.at(i) == "R") {
+                int k = i + 1;
+                radius = data.at(k).toInt();
+            }
+        }
+
+        if(pointsVec.count() == 1) {
+            drawDotCircle(radius);
+        } else {
+            drawCircle();
+        }
+}
+
 void Scene::setTextData(const QStringList &data) {
-    if(data.at(0) != TextType) {
+    /*if(data.at(0) != TextType) {
         return;
-    }
+    }*/
+
 
     QString text = "";
+    QString fontHeight = "";
     for(int i = 0; i < data.count(); i++) {
         if(data.at(i) == "P") {
             int x = i + 1;
@@ -512,10 +698,13 @@ void Scene::setTextData(const QStringList &data) {
             int k = i + 1;
             text = data.at(k);
         }
+        if(data.at(i) == "FH") {
+            fontHeight = data.at(i + 1);
+        }
     }
 
     if(pointsVec.count() == 1) {
-        drawText(text);
+        drawText(text, fontHeight);
     } else {
         drawText();
     }

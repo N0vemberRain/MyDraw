@@ -13,6 +13,7 @@ const int MoveType = QGraphicsItem::UserType + 7;
 const int CheckType = QGraphicsItem::UserType + 10;
 const int SelectType = QGraphicsItem::UserType + 8;
 const int TextType = QGraphicsItem::UserType + 9;
+const int DotType = QGraphicsItem::UserType + 11;
 
 
 enum class ItemType { Point = 0, Line = 1, Ellipse = 2, Rect = 3, Circle = 4,

@@ -27,6 +27,10 @@ WorkWidget::WorkWidget(QWidget *parent, const ItemType type) : QWidget(parent), 
     layout->addWidget(pointOneEditX);
     layout->addWidget(pointOneEditY);
 
+    pointTwoEditX = nullptr;
+    pointTwoEditY = nullptr;
+    widthEdit = nullptr;
+    heightEdit = nullptr;
 
     switch (type) {
     case ItemType::Point: makePointWgt(); break;
@@ -137,12 +141,22 @@ void WorkWidget::makeTextWgt() {
     width = new QLabel("&Текст");
     widthEdit = new QLineEdit();
     width->setBuddy(widthEdit);
+    waitText = true;
+    connect(widthEdit, SIGNAL(editingFinished()), this, SLOT(slotEditingFinished()));
 
     QComboBox *cBox = new QComboBox;
     cBox->setDisabled(true);
 
+    fontHeight = new QComboBox;
+    fontHeight->addItem("5");
+    fontHeight->addItem("7");
+    fontHeight->addItem("10");
+    fontHeight->addItem("11");
+    fontHeight->addItem("14");
+
     layout->addWidget(width);
     layout->addWidget(widthEdit);
+    layout->addWidget(fontHeight);
     layout->addWidget(cBox);
 }
 
@@ -216,7 +230,7 @@ QStringList WorkWidget::getPolylineData() {
 QStringList WorkWidget::getTextData() {
     QStringList data;
     data << QString::number(TextType) << "P" << pointOneEditX->text() << pointOneEditY->text() <<
-            "T" << widthEdit->text();
+            "T" << widthEdit->text() << "FH" << fontHeight->currentText();
 
     return data;
 }
@@ -302,7 +316,7 @@ void WorkWidget::setCircleData(const QStringList &data) {
 }
 
 void WorkWidget::setTextData(const QStringList &data) {
-    if(data.at(0) != TextType) {
+    if(data.at(0).toInt() != TextType) {
         return;
     }
 
@@ -315,6 +329,11 @@ void WorkWidget::setTextData(const QStringList &data) {
         }
         if(data.at(i) == "T") {
             widthEdit->setText(data.at(i + 1));
+            i++;
+            continue;
+        }
+        if(data.at(i) == "FH") {
+            fontHeight->setCurrentText(data.at(i + 1));
             i++;
             continue;
         }
@@ -437,5 +456,42 @@ void WorkWidget::checkData() {
         break;
     case ItemType::Circle: checkCircleData();
         break;
+    }
+}
+
+void WorkWidget::setPoint(const QPointF &p) {
+    if(qFuzzyCompare(p.x(), pointOneEditX->text().toDouble()) &&
+            qFuzzyCompare(p.y(), pointOneEditY->text().toDouble())) {
+        return;
+    }
+    if(pointOneEditX->text().isEmpty() && pointOneEditY->text().isEmpty()) {
+        pointOneEditX->setText(QString::number(p.x()));
+        pointOneEditY->setText(QString::number(p.y()));
+    } else if(pointTwoEditX != nullptr && pointTwoEditY != nullptr) {
+        if(pointTwoEditX->text().isEmpty() && pointTwoEditY->text().isEmpty()) {
+            pointTwoEditX->setText(QString::number(p.x()));
+            pointTwoEditY->setText(QString::number(p.y()));
+        }
+    }
+}
+
+void WorkWidget::endInput() {
+    if(pointOneEditX != nullptr) {
+        pointOneEditX->clear();
+    }
+    if(pointOneEditY != nullptr) {
+        pointOneEditY->clear();
+    }
+    if(pointTwoEditX != nullptr) {
+        pointTwoEditX->clear();
+    }
+    if(pointTwoEditY != nullptr) {
+        pointTwoEditY->clear();
+    }
+    if(widthEdit != nullptr) {
+        widthEdit->clear();
+    }
+    if(heightEdit != nullptr) {
+        heightEdit->clear();
     }
 }

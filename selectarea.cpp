@@ -1,3 +1,4 @@
+
 #include "selectarea.h"
 
 SelectArea::SelectArea(QObject *parent) : QObject(parent)

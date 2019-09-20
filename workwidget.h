@@ -30,6 +30,17 @@ public:
 
     QStringList getData(const ItemType type);
     void setItemData(const QStringList &data);
+
+    void setPoint(const QPointF &p);
+    void endInput();
+
+   /* QString getText() {
+        while (waitText) {
+            ;
+        }
+        waitText = true;
+        return widthEdit->text();
+    }*/
 private:
     QStringList getPointData();
     QStringList getLineData();
@@ -61,10 +72,13 @@ private:
     QLineEdit *widthEdit;
     QLineEdit *heightEdit;
     QComboBox *changeWay;
+    QComboBox *fontHeight;
 
     QHBoxLayout *layout;
 
     ItemType type;
+
+    bool waitText;
 signals:
     void stop();
     void create();
@@ -79,6 +93,9 @@ private slots:
     void slotChangeData(const QString &text);
     void slotChangeRectData();
     void slotChangeWay(const int index);
+   /* void slotEditingFinished() {
+        waitText = false;
+    }*/
 };
 
 

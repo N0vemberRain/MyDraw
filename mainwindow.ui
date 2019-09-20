@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>865</width>
-    <height>553</height>
+    <width>1300</width>
+    <height>700</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -287,7 +287,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>865</width>
+     <width>1300</width>
      <height>20</height>
     </rect>
    </property>
@@ -301,6 +301,41 @@
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
+  <action name="action">
+   <property name="text">
+    <string>Открыть</string>
+   </property>
+  </action>
+  <action name="action_2">
+   <property name="text">
+    <string>Новый</string>
+   </property>
+  </action>
+  <action name="action_3">
+   <property name="text">
+    <string>Сохранить</string>
+   </property>
+  </action>
+  <action name="action_4">
+   <property name="text">
+    <string>Закрыть</string>
+   </property>
+  </action>
+  <action name="action_5">
+   <property name="text">
+    <string>Выход</string>
+   </property>
+  </action>
+  <action name="action_6">
+   <property name="text">
+    <string>Геометрия</string>
+   </property>
+  </action>
+  <action name="action_7">
+   <property name="text">
+    <string>Преобразования</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>
