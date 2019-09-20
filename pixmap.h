@@ -9,46 +9,51 @@
 #include "types.h"
 #include "line.h"
 #include "circle.h"
+#include "point.h"
 
-class Dot : public QObject, public QGraphicsItem { //QGraphicsRectItem {
+class CheckRect : public QObject, public QGraphicsItem {
     Q_OBJECT
 public:
-    enum { Type = DotType };
-    explicit Dot(const int x, const int y,
-                 const double imgX, const double imgY);
-    explicit Dot();
-    explicit Dot(const int x, const int y);
+    enum {Type = DotType };
+    explicit CheckRect(QObject *parent = nullptr)
+        : QObject(parent), QGraphicsItem() {
+        mRect.setTopLeft(QPoint(0, 0));
+        mRect.setBottomRight(QPoint(50, 50));
+    }
+    explicit CheckRect(const int x, const int y, const double imgX, const double imgY)
+        : QObject(nullptr), QGraphicsItem(), _x(x), _y(y), _imgX(imgX), _imgY(imgY) {
+        mRect.setTopLeft(QPointF(_imgX, _imgY));
+        mRect.setBottomRight(QPointF(_imgX + 4.4, _imgY + 6));
+    }
+    ~CheckRect() {
 
-    int type() const { return Type; }
-    void setImgCoords(const double imgX, const double imgY);
-    void setCoords(const int x, const int y);
-    QRectF getRect();
-    int getX() const { return _x; }
-    int getY() const { return _y; }
-    void check() { update(); }
-   // void setState(const bool state) { _state = state; update(); }
+    }
+
+    QRectF getRect() const {
+        return mRect;
+    }
 protected:
     QRectF boundingRect() const {
         return mRect;
     }
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-               QWidget *widget);
+               QWidget *widget) {
+        painter->setPen(QPen(Qt::red, 2));
+        painter->drawRect(mRect);
+        Q_UNUSED(option);
+        Q_UNUSED(widget);
+    }
 
 private:
-
-    const double realWidth = 0.44;
-    const double realHeight = 0.6;
-    double width = 10 * realWidth;
-    double height = 10 * realHeight;
-
+    QRectF mRect;
     int _x;
     int _y;
-    double _imgX;
-    double _imgY;
-    bool _state;
-    QRectF mRect;
-    QPen *mPen;
+    double _imgX;//10 * realWidth;
+    double _imgY;//10 * realHeight;
+
 };
+
+
 
 class PixMap : public QObject, public QGraphicsRectItem {
     Q_OBJECT

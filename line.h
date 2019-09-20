@@ -10,31 +10,74 @@
 #include "types.h"
 #include "point.h"
 
-class LineDot : public QObject {
+
+class LineDot : public QObject, public QGraphicsItem {
     Q_OBJECT
 public:
     enum { Type = LineType };
     explicit LineDot(QObject *parent)
         : QObject(parent)/*, p1(0, 0), p2(0, 0)*/ {
+        setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
 
     }
     explicit LineDot(const int px1, const int py1, const int px2, const int py2)
-        : QObject(), x0(px1), y0(py1), x1(px2), y1(py2) {
+        : QObject(nullptr), QGraphicsItem(), x0(px1), y0(py1), x1(px2), y1(py2) {
         createLine2();
+        setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+    }
+
+    ~LineDot() {
+
     }
 
     QVector<QPair<int, int>> getLine() const {
-        return points;
+        return coords;
     }
+
+    QRectF getRect() const { return boundingRect(); }
 protected:
-    /*void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-               QWidget *widget) override {
-        for(const auto & it : points) {
-            painter->drawRect(it);
+    QRectF boundingRect() const {
+        auto begin = points.at(0);
+        auto end = points.last();
+
+        if(begin->getX() < end->getX()) {
+            if(begin->getY() < end->getY()) {
+                return QRectF(begin->getRect().topLeft(), end->getRect().bottomRight());
+            } else {
+                return QRectF(begin->getRect().bottomLeft(), end->getRect().topRight());
+            }
+        } else {
+            if(begin->getY() < end->getY()) {
+                return QRectF(begin->getRect().bottomRight(), end->getRect().topLeft());
+            } else {
+                return QRectF(begin->getRect().topRight(), end->getRect().bottomLeft());
+            }
         }
-    }*/
+
+    }
+
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+               QWidget *widget) {
+        if(isSelected()) {
+            painter->setPen(QPen(Qt::blue, 1));
+        } else {
+            painter->setPen(QPen(Qt::black, 1));
+        }
+        painter->setBrush(Qt::black);
+        for(const auto & it : points) {
+            painter->drawRect(it->getRect());
+            Q_UNUSED(option);
+            Q_UNUSED(widget);
+        }
+    }
 
 private:
+    void createDot(const int x, const int y) {
+        auto imgX = x * 4.4;
+        auto imgY = y * 6;
+        Dot *dot = new Dot(x, y, imgX, imgY);
+        points.append(dot);
+    }
     void createLine() {
         int deltaX = abs(x1 - x0);
         int deltaY = abs(y1 - y0);
@@ -51,8 +94,8 @@ private:
         }
         for(int x = x0; x <= x1; x++) {
             // p(x, y);
-            points.append(qMakePair(x, y));
-
+            coords.append(qMakePair(x, y));
+            createDot(x, y);
             error += deltaError;
             if((2 * deltaError) >= deltaX) {
                 y += diry;
@@ -76,7 +119,8 @@ private:
         int diry = (y0 < y1) ? 1 : -1;
         int y = y0;
         for(int x = x0; x <= x1; x++) {
-            points.append(qMakePair(comp ? y : x, comp ? x : y));
+            coords.append(qMakePair(comp ? y : x, comp ? x : y));
+            createDot(x, y);
             error -= deltaY;
             if (error < 0) {
                 y += diry;
@@ -93,7 +137,9 @@ private:
     //Point2 p1;
     //Point2 p2;
     int x0, y0, x1, y1;
-    QVector<QPair<int, int>> points;
+    QVector<QPair<int, int>> coords;
+    QVector<Dot*> points;
+
 };
 
 class Line : public QObject, public QGraphicsItem {

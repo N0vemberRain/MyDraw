@@ -39,11 +39,12 @@ void Scene::selectOneItemMode(const bool state) {
 
 void Scene::selectOff() {
     foreach(auto item, this->selectedItems()) {
-        if(auto itemObj = dynamic_cast<QObject*>(item)) {
+        item->setSelected(false);
+        /*if(auto itemObj = dynamic_cast<QObject*>(item)) {
             auto metaObj = itemObj->metaObject();
             metaObj->invokeMethod(itemObj, "select", Qt::DirectConnection,
                                   Q_ARG(bool, false));
-        }
+        }*/
     }
 }
 
@@ -249,11 +250,12 @@ void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent *pe) {
             auto scenePos = item->scenePos();
             auto pos2 = item->pos();
             if(area.contains(item->boundingRect())) {
-                if(auto itemObj = dynamic_cast<QObject*>(item)) {
+                item->setSelected(true);
+                /*if(auto itemObj = dynamic_cast<QObject*>(item)) {
                     auto metaObj = itemObj->metaObject();
                     metaObj->invokeMethod(itemObj, "select", Qt::DirectConnection,
                                           Q_ARG(bool, true));
-                }                //item->setSelected(true);
+                } */               //item->setSelected(true);
             }
         }
         mode = Mode::Normal;
@@ -348,7 +350,7 @@ QPair<int, int> Scene::findDot(const QPointF &p) {
 }
 
 QRectF Scene::findPixRect(const QPointF &p) {
-
+    return map.findPixRect(p);
 }
 
 void Scene::drawPoint() {
@@ -360,10 +362,11 @@ void Scene::drawPoint() {
     Dot *dot = new Dot(xy.first, xy.second, r.topLeft().x(), r.topLeft().y());
     //map.addPoint(coords.first, coords.second);
     this->addItem(dot);
+    //auto n = items();
+   // auto c = new CheckRect(xy.first, xy.second, r.topLeft().x(), r.topLeft().y());
+    //addItem(c);
+    //addItem(new CheckRect);
     pointsVec.clear();
-    auto a = this->items();
-    dot->check();
-    waitingPoint = false;
     emit endInputSignal();
     update();
 }
@@ -392,8 +395,10 @@ void Scene::drawLine() {
             auto p1 = findDot(pointsVec.at(0));
             auto p2 = findDot(pointsVec.at(1));
             LineDot *line = new LineDot(p1.first, p1.second, p2.first, p2.second);
-            auto points = line->getLine();
-            map.addLine(points);
+            //auto points = line->getLine();
+            //map.addLine(points);
+            addItem(line);
+          //  addRect(line->getRect());
             pointsVec.clear();
             waitingPoint = false;
             emit endInputSignal();
