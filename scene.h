@@ -148,6 +148,7 @@ private:
     void drawDotLine();
     void drawCircle();
     void drawCircle(const double radius);
+    void drawDotCircle();
     void drawDotCircle(const int radiaus);
     void drawRect();
     void drawRect(const double width, const double height);

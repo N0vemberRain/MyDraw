@@ -10,6 +10,120 @@
 
 #include "types.h"
 
+class InputWgt : public QWidget {
+    Q_OBJECT
+public:
+    explicit InputWgt() : QWidget() {
+        mOkButton = new QPushButton("&Создать");
+        connect(mOkButton, SIGNAL(clicked()), this, SLOT(slotCreate()));
+
+        mCancelButton = new QPushButton("&Стоп");
+        connect(mCancelButton, SIGNAL(clicked()), this, SLOT(slotStop()));
+
+        mPosLabel = new QLabel("&Точка 1");
+        mPosXLine = new QLineEdit();
+
+        mPosLabel->setBuddy(mPosXLine);
+        mPosYLine = new QLineEdit();
+        mPosLabel->setBuddy(mPosYLine);
+
+        auto layout = new QHBoxLayout;
+        layout->addWidget(mOkButton);
+        layout->addWidget(mCancelButton);
+        layout->addWidget(mPosLabel);
+        layout->addWidget(mPosXLine);
+        layout->addWidget(mPosYLine);
+    }
+    virtual ~InputWgt() {}
+    QHBoxLayout* getLayout() {
+        return mLayout;
+    }
+private:
+    QLabel *mPosLabel;
+    QLineEdit *mPosXLine;
+    QLineEdit *mPosYLine;
+    QPushButton *mOkButton;
+    QPushButton *mCancelButton;
+    QHBoxLayout *mLayout;
+};
+
+class LineInputWgt : public InputWgt {
+    Q_OBJECT
+public:
+    explicit LineInputWgt() : InputWgt() {
+        mEndLabel = new QLabel("&Точка 2");
+        mEndXLine = new QLineEdit();
+
+        mEndLabel->setBuddy(mEndXLine);
+        mEndYLine = new QLineEdit();
+        mEndLabel->setBuddy(mEndYLine);
+        getLayout()->addWidget(mEndLabel);
+        getLayout()->addWidget(mEndXLine);
+        getLayout()->addWidget(mEndYLine);
+    }
+
+    virtual ~LineInputWgt() {}
+private:
+    QLabel *mEndLabel;
+    QLineEdit *mEndXLine;
+    QLineEdit *mEndYLine;
+};
+
+class RectInputWgt : public InputWgt {
+    Q_OBJECT
+public:
+    explicit RectInputWgt() : InputWgt() {
+
+    }
+
+    virtual ~RectInputWgt() {}
+private:
+    QLabel *mEndLabel;
+    QLineEdit mEndXLine;
+    QLineEdit *mEndYLine;
+    QLabel *mWidthLabel;
+    QLabel *mHeightLabel;
+    QLineEdit *mWidthLine;
+    QLineEdit *mHeightLine;
+};
+
+class InputFactory : public QWidget {
+    Q_OBJECT
+public:
+    explicit InputFactory() : QWidget() {}
+    virtual ~InputFactory() {}
+
+    virtual InputWgt* factoryMethod() = 0;
+
+private:
+
+};
+
+class LineInputFactory : public InputFactory {
+    Q_OBJECT
+public:
+    explicit LineInputFactory() :InputFactory () {}
+    ~LineInputFactory() {}
+
+    InputWgt* factoryMethod() {
+        return new LineInputWgt;
+    }
+private:
+
+};
+
+class RectInputFactory : public InputFactory {
+    Q_OBJECT
+public:
+    explicit RectInputFactory() : InputFactory () {}
+    ~RectInputFactory() {}
+
+    InputWgt* factoryMethod() {
+        return new RectInputWgt;
+    }
+private:
+
+};
 
 class WorkWidget : public QWidget
 {
