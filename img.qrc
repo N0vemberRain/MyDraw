@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/img">
+        <file>img/circle.jpg</file>
+        <file>img/line.jpg</file>
+        <file>img/polyline.jpg</file>
+        <file>img/rect.jpg</file>
+        <file>img/text.jpg</file>
+        <file>img/Gnome-Document-New-32.png</file>
+        <file>img/Gnome-Document-Open-32.png</file>
+        <file>img/Gnome-Document-Save-32.png</file>
+    </qresource>
+</RCC>

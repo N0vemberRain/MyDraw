@@ -12,6 +12,7 @@
 #include <QMdiSubWindow>
 #include <QFileDialog>
 #include <math.h>
+#include <QGraphicsView>
 
 #include "types.h"
 
@@ -48,6 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    //this->showFullScreen();
     createMenu();
     createToolBar();
     createMdiArea();
@@ -59,10 +61,10 @@ MainWindow::MainWindow(QWidget *parent) :
     //ui->graphicsView->setScene(m_scene);
     //ui->graphicsView->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
 //    ui->graphicsView->scale(4, 4);
-    QHBoxLayout *layout = new QHBoxLayout;
-    ui->widget->setLayout(layout);
+    //QHBoxLayout *layout = new QHBoxLayout;
+    //ui->widget->setLayout(layout);
 
-    connect(ui->pointBut, SIGNAL(clicked()), this, SLOT(slotPointBut()));
+    /*connect(ui->pointBut, SIGNAL(clicked()), this, SLOT(slotPointBut()));
     connect(ui->lineBut, SIGNAL(clicked()), this, SLOT(slotLineBut()));
     connect(ui->polylineBut, SIGNAL(clicked()), this, SLOT(slotPolylineBut()));
     connect(ui->circleBut, SIGNAL(clicked()), this, SLOT(slotCircleBut()));
@@ -95,7 +97,7 @@ MainWindow::MainWindow(QWidget *parent) :
     slotGrid(true);
 
    // workWgtDock = new QDockWidget("Dock", this);
-   // addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, workWgtDock);
+   // addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, workWgtDock);*/
 }
 
 MainWindow::~MainWindow()
@@ -110,17 +112,26 @@ void MainWindow::createMenu() {
     QMenu *moveMenu = new QMenu("&Перемещение");
 
     newFileAction = new QAction(tr("&Новый"), this);
+    newFileAction->setIcon(QIcon(":/img/img/Gnome-Document-New-32.png"));
     openFileAction = new QAction(tr("&Открыть"), this);
+    openFileAction->setIcon(QIcon(":/img/img/Gnome-Document-Open-32.png"));
     saveFileAction = new QAction(tr("&Сохранить"), this);
+    saveFileAction->setIcon(QIcon(":/img/img/Gnome-Document-Save-32.png"));
     closeFileActions = new QAction(tr("&Закрыть"), this);
     exitAction = new QAction("&Выход", this);
 
     pointAction = new QAction(tr("&Точка"), this);
+    //pointAction->setIcon(QIcon)
     lineAction = new QAction(tr("&Прямая"), this);
+    lineAction->setIcon(QIcon(":/img/img/line.jpg"));
     polylineAction = new QAction(tr("&Ломаная"), this);
+    polylineAction->setIcon(QIcon(":/img/img/polyline.jpg"));
     rectAction = new QAction(tr("&Прямоугольник"), this);
+    rectAction->setIcon(QIcon(":/img/img/rect.jpg"));
     circleAction = new QAction(tr("&Окружность"), this);
+    circleAction->setIcon(QIcon(":/img/img/circle.jpg"));
     textAction = new QAction(tr("&Текст"), this);
+    textAction->setIcon(QIcon(":/img/img/text.jpg"));
 
     removeAction = new QAction(tr("&Удалить"), this);
     removeAction->setShortcut(QKeySequence::Delete);
@@ -191,19 +202,26 @@ void MainWindow::createToolBar() {
 }
 
 void MainWindow::createMdiArea() {
-    mMdiArea = new QMdiArea;
-    mMdiArea->setViewMode(QMdiArea::TabbedView);
-    mMdiArea->setTabsClosable(true);
-    mMdiArea->setTabsMovable(true);
-    mMdiArea->setTabShape(QTabWidget::Triangular);
-    mMdiArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    mMdiArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    /*ui->mdiArea = new QMdiArea;
+    ui->mdiArea->setViewMode(QMdiArea::TabbedView);
+    ui->mdiArea->setTabsClosable(true);
+    ui->mdiArea->setTabsMovable(true);
+    ui->mdiArea->setTabShape(QTabWidget::Triangular);
+    ui->mdiArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    ui->mdiArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 
-    setCentralWidget(mMdiArea);
+    setCentralWidget(ui->mdiArea);*/
+
+    ui->mdiArea->setViewMode(QMdiArea::TabbedView);
+    ui->mdiArea->setTabsClosable(true);
+    ui->mdiArea->setTabsMovable(true);
+    ui->mdiArea->setTabShape(QTabWidget::Triangular);
+    ui->mdiArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    ui->mdiArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 }
 
 Scene* MainWindow::getScene() {
-    auto w = mMdiArea->currentSubWindow();
+    auto w = ui->mdiArea->currentSubWindow();
     return qobject_cast<Scene*>(
                 qobject_cast<QGraphicsView*>(
                     w->widget())->scene()
@@ -211,7 +229,7 @@ Scene* MainWindow::getScene() {
 }
 
 QGraphicsView* MainWindow::getView() {
-    auto w = mMdiArea->currentSubWindow();
+    auto w = ui->mdiArea->currentSubWindow();
     return qobject_cast<QGraphicsView*>(w->widget());
 }
 
@@ -229,11 +247,11 @@ void MainWindow::slotOpenFile() {
 
     QPixmap img;
     img.load(str, "xbm");
-    auto view = new QGraphicsView(mMdiArea);
+    auto view = new QGraphicsView(ui->mdiArea);
     auto scene = new Scene;
     mScenes.append(scene);
     view->setScene(scene);
-    mMdiArea->addSubWindow(view);
+    ui->mdiArea->addSubWindow(view);
     view->setWindowTitle("Subwindow");
     view->show();
     view->setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -242,16 +260,17 @@ void MainWindow::slotOpenFile() {
 }
 
 void MainWindow::slotNewFile() {
-    auto view = new QGraphicsView(mMdiArea);
+    auto view = new QGraphicsView(ui->mdiArea);
     auto scene = new Scene;
     connect(scene, SIGNAL(editSignal(QGraphicsItem*)), this, SLOT(slotEditItem(QGraphicsItem*)));
     mScenes.append(scene);
     view->setScene(scene);
-    view->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-    mMdiArea->addSubWindow(view);
+    view->setAlignment(/*Qt::AlignTop | */Qt::AlignCenter);
+    ui->mdiArea->addSubWindow(view);
     view->setWindowTitle("Subwindow");
     view->show();
-    view->scale(7, 7);
+    view->scale(3, 3);
+    view->setStyleSheet("background: rgb(50, 50, 50);");
 }
 
 void MainWindow::slotRemove() {
@@ -284,7 +303,7 @@ void MainWindow::slotCloseFile() {
 }
 
 void MainWindow::slotSaveFile() {
-    auto w = mMdiArea->currentSubWindow();
+    auto w = ui->mdiArea->currentSubWindow();
     if(w == nullptr) {
         return;
     }
@@ -315,9 +334,9 @@ void MainWindow::slotExit() {
 }
 
 void MainWindow::slotSetScale() {
-    double sx = ui->xEdit->text().toDouble();
+    /*double sx = ui->xEdit->text().toDouble();
     double sy = ui->yEdit->text().toDouble();
-    ui->graphicsView->scale(sx, sy);
+    ui->graphicsView->scale(sx, sy);*/
 }
 
 /*void MainWindow::slotSetText() {
@@ -330,7 +349,7 @@ void MainWindow::slotSetScale() {
 
 void MainWindow::slotSaveScene() {
 //    m_scene->gridActivate(false);
-    QPixmap img;// = QPixmap::grabWidget(ui->graphicsView);
+   /* QPixmap img;// = QPixmap::grabWidget(ui->graphicsView);
 
     auto r = ui->graphicsView->sceneRect().toRect();
     r.setWidth(- r.width());
@@ -362,7 +381,7 @@ void MainWindow::slotSaveScene() {
 }
 
 void MainWindow::slotSaveView() {
-    getScene()->gridActivate(false);
+   /* getScene()->gridActivate(false);
     ui->graphicsView->scale(0.25, 0.25);
     auto r = ui->graphicsView->sceneRect().toRect();
     auto pos = QPoint(ui->graphicsView->pos().x(), ui->graphicsView->pos().y() + 8);
@@ -375,7 +394,7 @@ void MainWindow::slotSaveView() {
     QPainter pixPainter(&img);
     img.save(file.fileName(), "xbm");
     getScene()->gridActivate(true);
-    ui->graphicsView->scale(4, 4);
+    ui->graphicsView->scale(4, 4);*/
 }
 
 void MainWindow::slotClearBut() {
@@ -494,7 +513,7 @@ void MainWindow::slotRectBut() {
         return;
     }
 
-    auto w = mMdiArea->currentSubWindow();
+    auto w = ui->mdiArea->currentSubWindow();
     if(w == nullptr) {
         return;
     }
@@ -603,7 +622,7 @@ void MainWindow::slotMoveItem() {
     shearTransform.translate(ui->xEdit->text().toDouble(), ui->yEdit->text().toDouble());
     item->setTransform(shearTransform);*/
     if(item->type() == RectType) {
-        qgraphicsitem_cast<RectItem*>(item)->setShear(ui->xEdit->text().toDouble(), ui->yEdit->text().toDouble());
+        //qgraphicsitem_cast<RectItem*>(item)->setShear(ui->xEdit->text().toDouble(), ui->yEdit->text().toDouble());
        // qgraphicsitem_cast<RectItem*>(item)->moveBy(ui->xEdit->text().toDouble(), ui->yEdit->text().toDouble());
     }
     changeMode(Mode::Normal);

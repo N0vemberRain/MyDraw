@@ -22,24 +22,24 @@ class Grid : public QObject, public QGraphicsRectItem {
 public:
     enum { Type = GridType };
     explicit Grid() : QObject(), QGraphicsRectItem() {
-        m_rect = QRect(0, 0, 128, 64);
+        m_rect = QRect(0, 0, 440, 320);
         m_pen = new QPen(Qt::gray, 1);
 
-        int x1 = 0, y1 = 0, x2 = 0, y2 = 64 , d = 0;
+        int x1 = 0, y1 = 0, x2 = 0, y2 = 320 , d = 0;
 
-        for(int i = 0; i < 16; i++) {
+        for(int i = 0; i < 44; i++) {
             lines.append(QLine(x1 + d, y1, x2 + d, y2));
            /* for(int j = 0; j < 8; j++) {
                 int dy = y1 + d;
                 nodes.append(QPoint(x1 + d, dy));
             }*/
-            d += 8;
+            d += 10;
         }
 
-        d = 0; x1 = 0; x2 = 128; y1 = 0; y2 = 0;
-        for (int i = 0; i < 8; i++) {
+        d = 0; x1 = 0; x2 = 440; y1 = 0; y2 = 0;
+        for (int i = 0; i < 32; i++) {
             lines.append(QLine(x1, y1 + d, x2, y2 + d));
-            d += 8;
+            d += 10;
         }
 
         setNodes();

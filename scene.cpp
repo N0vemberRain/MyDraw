@@ -6,7 +6,7 @@
 Scene::Scene(QObject *parent )
     : QGraphicsScene (parent)
 {
-    setSceneRect(QRectF(0, 0, 1280, 640));
+    setSceneRect(QRectF(0, 0, 440, 320));
     waitingPoint = false;
     targetItem = false;
     oneItemSelect = true;
@@ -14,10 +14,12 @@ Scene::Scene(QObject *parent )
     gridState = true;
     mode = Mode::Normal;
     //rubberBand = new QRubberBand(QRubberBand::Rectangle);
-    //drawGrid();
-    drawPixMap();
+    drawGrid();
+    //drawPixMap();
     this->setItemIndexMethod(QGraphicsScene::NoIndex); // настраиваем индексацию элементов
     addItem(&selectArea);
+    addRect(QRect(10, 10, 420, 297), QPen(Qt::white, 2));
+    addRect(this->sceneRect(), QPen(Qt::white, 1));
 }
 
 Scene::~Scene() {
@@ -289,20 +291,7 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *pe) {
 }
 
 void Scene::drawGrid() {
-
-   // auto gridArea = this->sceneRect();
-   /* int x1 = 0, y1 = 0, x2 = 0, y2 = 64 , d = 0;
-
-    for(int i = 0; i < 16; i++) {
-        this->addLine(QLine(x1 + d, y1, x2 + d, y2), QPen(Qt::gray));
-        d += 8;
-    }
-
-    d = 0; x1 = 0; x2 = 128; y1 = 0; y2 = 0;
-    for (int i = 0; i < 8; i++) {
-        this->addLine(QLine(x1, y1 + d, x2, y2 + d), QPen(Qt::gray));
-        d += 8;
-    }*/this->addItem(&grid);
+    this->addItem(&grid);
 }
 
 void Scene::drawPixMap() {
