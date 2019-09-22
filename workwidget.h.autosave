@@ -84,6 +84,8 @@ public:
         for(int i = 0; i < getLayout()->rowCount(); i++) {
             getLayout()->setRowStretch(i, 1);
         }
+        
+        
     }
 
     virtual ~LineInputWgt() {}

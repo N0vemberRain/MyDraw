@@ -53,6 +53,10 @@ private:
     void changeMode(const Mode mode);
     void changeType(const ItemType type);
 
+    InputWgt* createInputWgt(InputFactory *factory) {
+        return factory->factoryMethod();
+    }
+
     Scene* getScene();
     QGraphicsView* getView();
 

@@ -428,10 +428,10 @@ void MainWindow::slotClearBut() {
 
 void MainWindow::startInput() {
     //m_scene->setTypeMode(m_mode);
-    wgt = new WorkWidget(this, m_type);
+   // wgt = new WorkWidget(this, m_type);
   //  auto l = ui->widget->layout();
     //l->addWidget(wgt);
-    connect(wgt, SIGNAL(stop()), this, SLOT(slotStop()));
+   /* connect(wgt, SIGNAL(stop()), this, SLOT(slotStop()));
     connect(wgt, SIGNAL(create()), this, SLOT(slotCreate()));
     connect(getScene(), SIGNAL(getPointSignal(const QPointF&)), this, SLOT(slotSceneGetPoint(const QPointF&)));
     connect(getScene(), SIGNAL(endInputSignal()), this, SLOT(slotSceneEndInput()));
@@ -439,6 +439,22 @@ void MainWindow::startInput() {
     workWgtDock = new QDockWidget("Dock", this);
     addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, workWgtDock);
     workWgtDock->setWidget(wgt);
+*/
+    InputWgt *inWgt = nullptr;
+    switch (m_type) {
+    case ItemType::Line: inWgt = createInputWgt(new LineInputFactory);
+        break;
+    case ItemType::Rect: inWgt = createInputWgt(new RectInputFactory);
+        break;
+    }
+
+    if(inWgt != nullptr) {
+        auto dock = new QDockWidget("Dock", this);
+        addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, dock);
+        dock->setWidget(inWgt);
+        dock->setStyleSheet("background: grb(25, 25, 25);");
+    }
+
 
 
     QStringList data;
@@ -458,7 +474,7 @@ void MainWindow::startInput() {
             break;
         }
         currentData = data;
-        wgt->setItemData(data);
+        //wgt->setItemData(data);
     } /*else if(m_type == ItemType::Text) {
         TextItemDialog dialog(0, QPoint(), getScene());
         if(dialog.exec()) {
