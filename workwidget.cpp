@@ -2,6 +2,67 @@
 
 #include <QComboBox>
 
+
+void FormInputWgt::slotOk() {
+    emit okSignal(prepareData());
+}
+
+void FormInputWgt::slotCancel() {
+    emit cancelSignal();
+}
+
+QStringList LineInputWgt::prepareData() const {
+    QStringList data;
+    data << "P1" << FormInputWgt::getPosX() << FormInputWgt::getPosY() <<
+            "P2" << mEndXLine->text() << mEndYLine->text();
+
+    return data;
+}
+
+void LineInputWgt::slotOk() {
+    emit okSignal(prepareData());
+}
+
+void LineInputWgt::slotCancel() {
+    emit cancelSignal();
+}
+
+
+QStringList RectInputWgt::prepareData() const {
+
+}
+
+void RectInputWgt::slotOk() {
+    emit okSignal(prepareData());
+}
+
+void RectInputWgt::slotCancel() {
+    emit cancelSignal();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 WorkWidget::WorkWidget(QWidget *parent, const ItemType type) : QWidget(parent), type(type)
 {
     createBut = new QPushButton("&Создать");

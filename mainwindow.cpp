@@ -455,7 +455,10 @@ void MainWindow::startInput() {
         dock->setStyleSheet("background: grb(25, 25, 25);");
     }
 
-
+    connect(inWgt, SIGNAL(okSignal(QStringList data)), this, SLOT([=](QStringList data){
+        getScene()->setTypeMode(Mode::Input);
+        getScene()->addShape(data);
+    }));
 
     QStringList data;
     if(m_mode == Mode::Edit) {

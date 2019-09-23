@@ -13,12 +13,52 @@
 class InputWgt : public QWidget {
     Q_OBJECT
 public:
-    explicit InputWgt() : QWidget() {
+    explicit InputWgt(QWidget *wgt = nullptr) : QWidget(wgt) {
         mOkButton = new QPushButton("&Создать");
-        //connect(mOkButton, SIGNAL(clicked()), this, SLOT(slotCreate()));
+        connect(mOkButton, SIGNAL(clicked()), this, SLOT(slotOk()));
 
         mCancelButton = new QPushButton("&Стоп");
-        //connect(mCancelButton, SIGNAL(clicked()), this, SLOT(slotStop()));
+        connect(mCancelButton, SIGNAL(clicked()), this, SLOT(slotCancel()));
+
+        mLayout = new QGridLayout;
+        mLayout->addWidget(mOkButton, 0, 0);
+        mLayout->addWidget(mCancelButton, 0, 1);
+
+        setStyleSheet("background: rgb(50, 50, 50); color: white;");
+        setMaximumSize(200, 200);
+        setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Maximum);
+
+
+        mLayout->setVerticalSpacing(5);
+        setLayout(mLayout);
+    }
+    virtual ~InputWgt() {}
+
+    void createLabel(QLabel *label) {
+        label->setMinimumHeight(50);
+        label->setMaximumHeight(50);
+        label->setMaximumWidth(250);
+        label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
+    }
+    QGridLayout* getLayout() {
+        return mLayout;
+    }
+
+private slots:
+    virtual void slotOk() = 0;
+    virtual void slotCancel() = 0;
+
+private:
+    QPushButton *mOkButton;
+    QPushButton *mCancelButton;
+    QGridLayout *mLayout;
+
+};
+
+class FormInputWgt : public InputWgt {
+    Q_OBJECT
+public:
+    explicit FormInputWgt() : InputWgt() {
 
         mPosLabel = new QLabel("&Точка 1");
         createLabel(mPosLabel);
@@ -28,46 +68,35 @@ public:
         mPosYLine = new QLineEdit();
         mPosLabel->setBuddy(mPosYLine);
 
-        mLayout = new QGridLayout;
-        mLayout->addWidget(mOkButton, 0, 0);
-        mLayout->addWidget(mCancelButton, 0, 1);
-        mLayout->addWidget(mPosLabel, 1, 0, 1, 2);
-        mLayout->addWidget(mPosXLine, 2, 0);
-        mLayout->addWidget(mPosYLine, 2, 1);
-
-        setStyleSheet("background: rgb(50, 50, 50); color: white;");
-
-        mLayout->setVerticalSpacing(5);
-
-
-        //mLayout->setSpacing(2);
+        getLayout()->addWidget(mPosLabel, 1, 0, 1, 2);
+        getLayout()->addWidget(mPosXLine, 2, 0);
+        getLayout()->addWidget(mPosYLine, 2, 1);
     }
 
-    void createLabel(QLabel *label) {
-        label->setMinimumHeight(50);
-        label->setMaximumHeight(50);
-        label->setMaximumWidth(250);
-        label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
-    }
-    virtual ~InputWgt() {}
-    QGridLayout* getLayout() {
-        return mLayout;
-    }
+    virtual ~FormInputWgt() {}
+
+protected:
+    QString getPosX() const { return mPosXLine->text(); }
+    QString getPosY() const { return mPosYLine->text(); }
+
+private slots:
+    virtual void slotOk();
+    virtual void slotCancel();
 private:
-
-
+    virtual QStringList prepareData() const = 0;
     QLabel *mPosLabel;
     QLineEdit *mPosXLine;
     QLineEdit *mPosYLine;
-    QPushButton *mOkButton;
-    QPushButton *mCancelButton;
-    QGridLayout *mLayout;
+
+signals:
+    void okSignal(const QStringList &data);
+    void cancelSignal();
 };
 
-class LineInputWgt : public InputWgt {
+class LineInputWgt : public FormInputWgt {
     Q_OBJECT
 public:
-    explicit LineInputWgt() : InputWgt() {
+    explicit LineInputWgt() : FormInputWgt() {
         mEndLabel = new QLabel("&Точка 2");
         createLabel(mEndLabel);
         mEndXLine = new QLineEdit();
@@ -84,19 +113,26 @@ public:
         for(int i = 0; i < getLayout()->rowCount(); i++) {
             getLayout()->setRowStretch(i, 1);
         }
+
+
     }
 
     virtual ~LineInputWgt() {}
+
+    virtual QStringList prepareData() const;
+private slots:
+    virtual void slotOk();
+    virtual void slotCancel();
 private:
     QLabel *mEndLabel;
     QLineEdit *mEndXLine;
     QLineEdit *mEndYLine;
 };
 
-class RectInputWgt : public InputWgt {
+class RectInputWgt : public FormInputWgt {
     Q_OBJECT
 public:
-    explicit RectInputWgt() : InputWgt() {
+    explicit RectInputWgt() : FormInputWgt() {
         mEndLabel = new QLabel(tr("&Точка2"));
         createLabel(mEndLabel);
         mEndXLine = new QLineEdit();
@@ -130,6 +166,12 @@ public:
     }
 
     virtual ~RectInputWgt() {}
+
+    virtual QStringList prepareData() const;
+
+private slots:
+    virtual void slotOk();
+    virtual void slotCancel();
 private:
     QLabel *mEndLabel;
     QLineEdit *mEndXLine;
@@ -152,13 +194,24 @@ private:
 
 };
 
+class ShearInputFactory : public InputFactory {
+    Q_OBJECT
+public:
+    explicit ShearInputFactory() : InputFactory() {}
+    ~ShearInputFactory() {}
+    /*
+    ShearInputWgt* factoryMethod() {
+        return new ShearInputWgt;
+    }*/
+};
+
 class LineInputFactory : public InputFactory {
     Q_OBJECT
 public:
-    explicit LineInputFactory() :InputFactory () {}
+    explicit LineInputFactory() : InputFactory () {}
     ~LineInputFactory() {}
 
-    InputWgt* factoryMethod() {
+    FormInputWgt* factoryMethod() {
         return new LineInputWgt;
     }
 private:
@@ -171,7 +224,7 @@ public:
     explicit RectInputFactory() : InputFactory () {}
     ~RectInputFactory() {}
 
-    InputWgt* factoryMethod() {
+    FormInputWgt* factoryMethod() {
         return new RectInputWgt;
     }
 private:
