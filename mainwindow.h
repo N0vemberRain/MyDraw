@@ -53,6 +53,8 @@ private:
     void changeMode(const Mode mode);
     void changeType(const ItemType type);
 
+    QByteArray createXbm(QVector<Dot*> &array);
+
     Scene* getScene();
     QGraphicsView* getView();
 
@@ -67,6 +69,7 @@ private:
     ItemType m_type;
     Mode m_mode;
     WorkWidget *wgt;
+    //PointInputWgt *wgt;
     QGraphicsItem *currentItem;
     QStringList currentData;
 
@@ -86,10 +89,15 @@ private:
     QAction *removeAction;
     QAction *removeAllAction;
     QAction *bindAction;
+    QAction *shearAction;
+    QAction *boundAction;
+    QAction *gridAction;
 
     QDockWidget *workWgtDock;
 
     QMdiArea *mMdiArea;
+
+    QVector<QPair<QGraphicsItem*, QGraphicsRectItem*>> bounds;
 
 private slots:
     void slotTextBut();
@@ -100,6 +108,8 @@ private slots:
     void slotPolylineBut();
     void slotRemove();
     void slotRemoveAll();
+    void slotShear();
+    void slotBound(const bool state);
 
     void slotOpenFile();
     void slotNewFile();
@@ -113,6 +123,8 @@ private slots:
 
     void slotStop();
     void slotCreate();
+    void slotOk(const int sh, const int sv);
+    void slotCancel();
  //   void slotCreateEdit();
   //  void slotGetData();
 
@@ -125,7 +137,7 @@ private slots:
     void slotCheckCircle();
     void slotDeleteSelected();
     void slotBind(bool state);
-    void slotGrid(int state);
+    void slotGrid(bool state);
 
     void slotSetScale();
     void slotSceneGetPoint(const QPointF &p);

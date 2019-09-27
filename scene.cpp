@@ -6,12 +6,13 @@
 Scene::Scene(QObject *parent )
     : QGraphicsScene (parent)
 {
-    setSceneRect(QRectF(0, 0, 1280, 640));
+    //setSceneRect(QRectF(0, 0, 1280, 640));
     waitingPoint = false;
     targetItem = false;
     oneItemSelect = true;
     bindState = true;
     gridState = true;
+
     mode = Mode::Normal;
     //rubberBand = new QRubberBand(QRubberBand::Rectangle);
     //drawGrid();
@@ -101,11 +102,15 @@ void Scene::inNormalMode(QGraphicsSceneMouseEvent *pe) {
                 switch (t) {
                 case RectType: qgraphicsitem_cast<RectItem*>(item)->setMouseEvent(pe);
                     break;
-                case CircleType: qgraphicsitem_cast<CircleItem*>(item)->setMouseEvent(pe);
+                case CircleType: //qgraphicsitem_cast<CircleItem*>(item)->setMouseEvent(pe);
+                    qgraphicsitem_cast<CircleDot*>(item)->setMouseEvent(pe);
                     break;
-                case LineType: qgraphicsitem_cast<Line*>(item)->setMouseEvent(pe);
+                case LineType: //qgraphicsitem_cast<Line*>(item)->setMouseEvent(pe);
+                    qgraphicsitem_cast<LineDot*>(item)->setMouseEvent(pe);
                     break;
                 case TextType: qgraphicsitem_cast<TextItem*>(item)->setMouseEvent(pe);
+                    break;
+                case DotType: qgraphicsitem_cast<Dot*>(item)->setMouseEvent(pe);
                     break;
                 }
             }
@@ -205,7 +210,7 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
             if(type == DotType) {
                 int d = 5;
             }
-            if(item->type() != GridType && item->type() != SelectType && item->type() != DotType) {
+            if(item->type() != GridType && item->type() != SelectType /*&& item->type() != DotType*/) {
                 if(item->boundingRect().contains(event->scenePos())) {
                     targetItem = true;
                     //auto r = itemsBoundingRect();
@@ -213,11 +218,15 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
                     switch (m_type) {
                     case ItemType::Rect: qgraphicsitem_cast<RectItem*>(item)->setMouseEvent(event);
                         break;
-                    case ItemType::Circle: qgraphicsitem_cast<CircleItem*>(item)->setMouseEvent(event);
+                    case ItemType::Circle: //qgraphicsitem_cast<CircleItem*>(item)->setMouseEvent(event);
+                        qgraphicsitem_cast<CircleDot*>(item)->setMouseEvent(event);
                         break;
-                    case ItemType::Line: qgraphicsitem_cast<Line*>(item)->setMouseEvent(event);
+                    case ItemType::Line: //qgraphicsitem_cast<Line*>(item)->setMouseEvent(event);
+                        qgraphicsitem_cast<LineDot*>(item)->setMouseEvent(event);
                         break;
                     case ItemType::Text: qgraphicsitem_cast<TextItem*>(item)->setMouseEvent(event);
+                        break;
+                    case ItemType::Point: qgraphicsitem_cast<Dot*>(item)->setMouseEvent(event);
                         break;
                     }
                 }
@@ -398,7 +407,7 @@ void Scene::drawLine() {
             //auto points = line->getLine();
             //map.addLine(points);
             addItem(line);
-          //  addRect(line->getRect());
+            //addRect(line->getRect());
             pointsVec.clear();
             waitingPoint = false;
             emit endInputSignal();
@@ -454,7 +463,9 @@ void Scene::drawCircle() {
         auto p1 = findDot(pointsVec.at(0));
         auto p2 = findDot(pointsVec.at(1));
         CircleDot *c = new CircleDot(p1.first, p1.second, p2.first - p1.first);
-        map.addLine(c->getPoints());
+        //map.addLine(c->getPoints());
+        addItem(c);
+        //addRect(c->getRect());
         pointsVec.clear();
         waitingPoint = false;
         emit endInputSignal();
@@ -484,7 +495,9 @@ void Scene::drawDotCircle(const int radiaus) {
     //auto p0 = findDot(pointsVec.at(0));
     CircleDot *c = new CircleDot(static_cast<int>(pointsVec.at(0).x()),
                                  static_cast<int>(pointsVec.at(0).y()), radiaus);
-    map.addLine(c->getPoints());
+    //map.addLine(c->getPoints());
+    addItem(c);
+    //addRect(c->getRect());
     pointsVec.clear();
     waitingPoint = false;
     emit endInputSignal();
@@ -724,16 +737,23 @@ void Scene::bindActivate(const bool state) {
 }
 
 void Scene::gridActivate(const bool state) {
-    if(gridState == state) {
-        return;
+    bool v = map.isVisible();
+    if(v == state) {
+        if(v) {
+            v = false;
+        } else {
+            v = true;
+        }
+    } else {
+        v = state;
     }
 
-    gridState = state;
-    if(state) {
-        grid.show();
+    if(v) {
+        map.show();
     } else {
-        grid.hide();
+        map.hide();
     }
+
 }
 
 QPointF Scene::checkBind(QPointF &point) {

@@ -2,6 +2,72 @@
 
 #include <QPainter>
 
+void LineDot::updateTransform() {
+    QTransform transform;
+    transform.translate(mHorizontalShear, mVerticalShear);
+
+    foreach(auto dot, points) {
+        dot->setTransform(transform);
+    }
+    //setTransform(transform);
+
+    foreach(auto dot, points) {
+        dot->setShearMouse(mHorizontalShear, mVerticalShear);
+    }
+
+    update();
+}
+
+QVector<QRectF*> LineDot::mapToPixels() {
+    QVector<QRectF*> pixels;
+    foreach(auto point, points) {
+        auto pixel = point->mapToPixels();
+        pixels.append(pixel);
+    }
+
+    return pixels;
+}
+
+QVector<Dot*> LineDot::mapToBitmap() {
+    return points;
+}
+
+/*
+void LineDot::setShear(const int horizontalShear, const int verticalShear) {
+    mHorizontalShear = horizontalShear;// * 4.4;
+    mVerticalShear = verticalShear;// * 6;
+
+    updateTransform();
+}*/
+
+void LineDot::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    if(event->scenePos().x() < 0 || event->scenePos().y() < 0) {
+        int d = 5;
+    }
+    auto dx = (event->scenePos().toPoint().rx() - mPreviousPoint.rx()) / 4.4;
+    auto dy = (event->scenePos().toPoint().ry() - mPreviousPoint.ry()) / 6;
+    mPreviousPoint = event->scenePos().toPoint();
+    mPHS.append(dx);
+    mPVS.append(dy);
+    setShear<double>(dx, dy);
+    QGraphicsItem::mouseMoveEvent(event);
+}
+
+void LineDot::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    setSelected(true);
+    this->setCursor(QCursor(Qt::ClosedHandCursor));
+
+    QGraphicsItem::mousePressEvent(event);
+}
+
+void LineDot::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+
+}
+
+void LineDot::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+
+}
+
 
 Line::Line(const QLineF &line)
     : QObject(), QGraphicsItem(), mLine(line) {

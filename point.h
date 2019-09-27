@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QGraphicsItem>
 #include <QPen>
+#include <QGraphicsSceneMouseEvent>
 #include "types.h"
 
 class Dot : public QObject, public QGraphicsItem { //QGraphicsRectItem {
@@ -30,7 +31,34 @@ public:
         update();
     }
    // void setState(const bool state) { _state = state; update(); }
+    void setShear(const double horizontalShear, const double verticalShear) {
+        mHorizontalShear = horizontalShear * 4.4;
+        mVerticalShear = verticalShear * 6;
+
+        updateTransform();
+    }
+
+    void setShearMouse(const double horizontalShear, const double verticalShear) {
+        mHorizontalShear = horizontalShear;// / 7;// / 4.4;
+        mVerticalShear = verticalShear;// / 7;// / 6;
+
+        updateTransform();
+    }
+    void setMouseEvent(QGraphicsSceneMouseEvent *event) {
+        if(event->type() == QEvent::GraphicsSceneMousePress) {
+            mousePressEvent(event);
+        }
+        if(event->type() == QEvent::GraphicsSceneMouseMove) {
+            mouseMoveEvent(event);
+        }
+    }
+
+    QRectF* mapToPixels();
 protected:
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
     QRectF boundingRect() const {
         return mRect;
     }
@@ -38,6 +66,19 @@ protected:
                QWidget *widget);
 
 private:
+    void updateTransform() {
+        QTransform transform;
+        transform.translate(mHorizontalShear, mVerticalShear);
+        setTransform(transform);
+
+        auto tmp = mRect;
+
+        mRect.setCoords(tmp.topLeft().rx() + mHorizontalShear,
+                        tmp.topLeft().ry() + mVerticalShear,
+                        tmp.bottomRight().rx() + mHorizontalShear,
+                        tmp.bottomRight().ry() + mVerticalShear);
+        update();
+    }
 
     const double realWidth = 0.44;
     const double realHeight = 0.6;
@@ -51,6 +92,10 @@ private:
     bool _state;
     QRectF mRect;
     QPen *mPen;
+
+    double mHorizontalShear;
+    double mVerticalShear;
+    QPointF mPreviousPoint;
 };
 
 class Point : public QObject, public QGraphicsItem {

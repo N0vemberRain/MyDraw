@@ -21,7 +21,8 @@ public:
 
     }
     explicit LineDot(const int px1, const int py1, const int px2, const int py2)
-        : QObject(nullptr), QGraphicsItem(), x0(px1), y0(py1), x1(px2), y1(py2) {
+        : QObject(nullptr), QGraphicsItem(), x0(px1), y0(py1), x1(px2), y1(py2),
+    mHorizontalShear(0.0), mVerticalShear(0.0) {
         createLine2();
         setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
     }
@@ -30,12 +31,46 @@ public:
 
     }
 
+    int type() const { return Type; }
+
     QVector<QPair<int, int>> getLine() const {
         return coords;
     }
 
     QRectF getRect() const { return boundingRect(); }
+
+    void setMouseEvent(QGraphicsSceneMouseEvent *event) {
+        if(event->type() == QEvent::GraphicsSceneMousePress) {
+            mousePressEvent(event);
+        }
+        if(event->type() == QEvent::GraphicsSceneMouseMove) {
+            mouseMoveEvent(event);
+        }
+/*
+        switch (event->type()) {
+        case QEvent::GraphicsSceneMousePress: mousePressEvent(event);
+            break;
+        case QEvent::GraphicsSceneMouseMove: mouseMoveEvent(event);
+        default: return;
+        }
+        */
+    }
+    template<typename T>
+    void setShear(const T horizontalShear, const T verticalShear) {
+        mHorizontalShear = horizontalShear;// * 4.4;
+        mVerticalShear = verticalShear;// * 6;
+
+        updateTransform();
+    }
+
+    QVector<QRectF*> mapToPixels();
+    QVector<Dot*> mapToBitmap();
 protected:
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
+
     QRectF boundingRect() const {
         auto begin = points.at(0);
         auto end = points.last();
@@ -65,13 +100,16 @@ protected:
         }
         painter->setBrush(Qt::black);
         for(const auto & it : points) {
-            painter->drawRect(it->getRect());
-            Q_UNUSED(option);
-            Q_UNUSED(widget);
+            painter->drawRect(mapRectFromScene(it->getRect()));
         }
+
+        Q_UNUSED(option);
+        Q_UNUSED(widget);
     }
 
 private:
+    void updateTransform();
+
     void createDot(const int x, const int y) {
         auto imgX = x * 4.4;
         auto imgY = y * 6;
@@ -140,6 +178,13 @@ private:
     QVector<QPair<int, int>> coords;
     QVector<Dot*> points;
 
+    double mHorizontalShear;
+    double mVerticalShear;
+    QPoint mPreviousPoint;
+
+    QVector<double> mPHS;
+    QVector<double> mPVS;
+
 };
 
 class Line : public QObject, public QGraphicsItem {
@@ -172,6 +217,7 @@ public:
     }
 
     void setShear(const double horizontal, const double vertical);
+
 public slots:
     void select(bool state);
 protected:

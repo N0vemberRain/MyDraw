@@ -3,6 +3,69 @@
 #include <QPainter>
 #include <math.h>
 
+void CircleDot::updateTransform() {
+    QTransform transform;
+    transform.translate(mHorizontalShear, mVerticalShear);
+    setTransform(transform);
+
+    auto tmp = mRect;
+    mRect.setCoords(tmp.topLeft().rx() + mHorizontalShear,
+                     tmp.topLeft().ry() + mVerticalShear,
+                     tmp.bottomRight().rx() + mHorizontalShear,
+                     tmp.bottomRight().ry() + mVerticalShear);
+
+    foreach(auto dot, mPoints) {
+        dot->setShear(mHorizontalShear, mVerticalShear);
+    }
+
+    update();
+
+}
+
+void CircleDot::setShear(const double horizontalShear, const double verticalShear) {
+    mHorizontalShear = horizontalShear;
+    mVerticalShear = verticalShear;
+
+    updateTransform();
+}
+
+QVector<QRectF*> CircleDot::mapToPixels() {
+    QVector<QRectF*> pixels;
+    foreach(auto point, mPoints) {
+        auto pixel = point->mapToPixels();
+        pixels.append(pixel);
+    }
+
+    return pixels;
+}
+
+QVector<Dot*> CircleDot::mapToBitmap() {
+    return mPoints;
+}
+
+void CircleDot::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    auto dx = (event->scenePos().toPoint().rx() - mPreviousPoint.rx()) / 4.4;
+    auto dy = (event->scenePos().toPoint().ry() - mPreviousPoint.ry()) / 6;
+    mPreviousPoint = event->scenePos().toPoint();
+    QGraphicsItem::mouseMoveEvent(event);
+    setShear(dx, dy);
+}
+
+void CircleDot::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    setSelected(true);
+    this->setCursor(QCursor(Qt::ClosedHandCursor));
+
+    QGraphicsItem::mousePressEvent(event);
+}
+
+void CircleDot::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+
+}
+
+void CircleDot::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+
+}
+
 Circle::Circle(const QPointF &origin, const double radius)
     : m_origin(origin), m_radius(radius) {
     m_pen = new QPen(Qt::black, 1);

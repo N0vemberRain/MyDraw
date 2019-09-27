@@ -8,38 +8,117 @@
 #include <QCursor>
 
 #include "types.h"
+#include "point.h"
 
-class CircleDot : QObject {
+class CircleDot : public QObject, public QGraphicsItem {
     Q_OBJECT
 public:
     enum { Type = CircleType };
-    explicit CircleDot(QObject *parent) : QObject(parent), x0(0), y0(0), radius(0) {
-
+    explicit CircleDot(QObject *parent)
+        : QObject(parent), QGraphicsItem (), x0(0), y0(0), radius(0) {
+        setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+        QPoint topLeft(4.4 * (x0 - radius), 6 * (y0 + radius + 1));
+        QPointF bottomRight(4.4 * (x0 + radius + 1), 6 * (y0 - radius));
+        mRect.setTopLeft(topLeft);
+        mRect.setBottomRight(bottomRight);
+        mPreviousPoint = mRect.center();
     }
 
     explicit CircleDot(const int x, const int y, const int r)
-        : QObject(), x0(x), y0(y), radius(r) {
+        : QObject(), QGraphicsItem (), x0(x), y0(y), radius(r) {
         createCircle();
+        setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+        QPoint topLeft(4.4 * (x0 - radius), 6 * (y0 + radius + 1));
+        QPointF bottomRight(4.4 * (x0 + radius + 1), 6 * (y0 - radius));
+        mRect.setTopLeft(topLeft);
+        mRect.setBottomRight(bottomRight);
+        mPreviousPoint = mRect.center();
     }
+
+    ~CircleDot() {}
+
     int type() const { return Type; }
 
     QVector<QPair<int, int>> getPoints() const {
         return points;
     }
+
+    QRectF getRect() const { return boundingRect(); }
+
+    void setMouseEvent(QGraphicsSceneMouseEvent *event) {
+        switch (event->type()) {
+        case QEvent::GraphicsSceneMousePress: mousePressEvent(event);
+            break;
+        case QEvent::GraphicsSceneMouseMove: mouseMoveEvent(event);
+            break;
+        default: return;
+        }
+    }
+
+    void setShear(const double horizontalShear, const double verticalShear);
+    QVector<QRectF*> mapToPixels();
+    QVector<Dot*> mapToBitmap();
+
+protected:
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
+
+    QRectF boundingRect() const override {
+        return mRect;
+    }
+
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+               QWidget *widget) {
+        if(isSelected()) {
+            painter->setPen(QPen(Qt::blue, 1));
+        } else {
+            painter->setPen(QPen(Qt::black, 1));
+        }
+        painter->setBrush(Qt::black);
+        for(const auto & it : mPoints) {
+            painter->drawRect(mapRectFromScene(it->getRect()));
+        }
+
+        Q_UNUSED(option);
+        Q_UNUSED(widget);
+    }
+
 private:
+    void updateTransform();
+    void createDot(const int x, const int y) {
+        auto imgX = x * 4.4;
+        auto imgY = y * 6;
+        Dot *dot = new Dot(x, y, imgX, imgY);
+        mPoints.append(dot);
+    }
     void createCircle() {
         int x = radius;
         int y = 0;
         int radiusError = 1 - x;
         while (x >= y) {
              points.append(qMakePair(x + x0, y + y0));
+             createDot(x + x0, y + y0);
              points.append(qMakePair(y + x0, x + y0));
+             createDot(y + x0, x + y0);
              points.append(qMakePair(-x + x0, y + y0));
+             createDot(-x + x0, y + y0);
+
              points.append(qMakePair(-y + x0, x + y0));
+             createDot(-y + x0, x + y0);
+
              points.append(qMakePair(-x + x0, -y + y0));
+             createDot(-x + x0, -y + y0);
+
              points.append(qMakePair(-y + x0, -x + y0));
+             createDot(-y + x0, -x + y0);
+
              points.append(qMakePair(x + x0, -y + y0));
+             createDot(x + x0, -y + y0);
+
              points.append(qMakePair(y + x0, -x + y0));
+             createDot(y + x0, -x + y0);
 
             y++;
             if(radiusError < 0) {
@@ -55,6 +134,12 @@ private:
     int y0;
     int radius;
     QVector<QPair<int, int>> points;
+    QVector<Dot*> mPoints;
+
+    double mHorizontalShear;
+    double mVerticalShear;
+    QPointF mPreviousPoint;
+    QRectF mRect;
 };
 
 class Circle : public QObject, public QGraphicsEllipseItem {
@@ -63,12 +148,12 @@ public:
     enum { Type = CircleType };
     explicit Circle(const QPointF &origin, const double radius);
     explicit Circle(const QPointF &origin, const QPointF radius);
-    ~Circle() {}
+    ~Circle() override {}
 
     int type() const override { return Type; }
-    QRectF boundingRect() const;
+    QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-                   QWidget *widget);
+                   QWidget *widget) override;
 
 private:
     QRectF makeCircle();

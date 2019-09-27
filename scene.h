@@ -43,6 +43,7 @@ public:
         }
 
         setNodes();
+
     }
 
     int type() const { return Type; }

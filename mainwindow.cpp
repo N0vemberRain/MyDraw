@@ -92,7 +92,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //ui->bindBox->setCheckState(Qt::CheckState::Checked);
     //ui->gridBox->setCheckState(Qt::CheckState::Checked);
     slotBind(true);
-    slotGrid(true);
+    //slotGrid(true);
 
    // workWgtDock = new QDockWidget("Dock", this);
    // addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, workWgtDock);
@@ -127,6 +127,12 @@ void MainWindow::createMenu() {
     removeAllAction = new QAction(tr("&Удалить все"), this);
     bindAction = new QAction(tr("&Привязка"), this);
     bindAction->setCheckable(true);
+    shearAction = new QAction(tr("&Сдвиг"));
+    boundAction = new QAction(tr("&Граница"));
+    boundAction->setCheckable(true);
+    boundAction->setChecked(false);
+    gridAction = new QAction(tr("&Сетка"));
+    boundAction->setCheckable(true);
 
     connect(newFileAction, SIGNAL(triggered()), this, SLOT(slotNewFile()));
     connect(openFileAction, SIGNAL(triggered()), this, SLOT(slotOpenFile()));
@@ -144,8 +150,9 @@ void MainWindow::createMenu() {
     connect(removeAction, SIGNAL(triggered()), this, SLOT(slotRemove()));
     connect(removeAllAction, SIGNAL(triggered()), this, SLOT(slotRemoveAll()));
     connect(bindAction, SIGNAL(triggered(bool)), this, SLOT(slotBind(bool)));
-
-    auto shearAction = new QAction(tr("&Сдвиг"), this);
+    connect(shearAction, SIGNAL(triggered()), this, SLOT(slotShear()));
+    connect(boundAction, SIGNAL(triggered(bool)), this, SLOT(slotBound(bool)));
+    connect(gridAction, SIGNAL(triggered(bool)), this, SLOT(slotGrid(bool)));
 
     fileMenu->addAction(newFileAction);
     fileMenu->addAction(openFileAction);
@@ -158,6 +165,9 @@ void MainWindow::createMenu() {
     editMenu->addAction(removeAction);
     editMenu->addAction(removeAllAction);
     editMenu->addAction(bindAction);
+    editMenu->addAction(shearAction);
+    editMenu->addAction(boundAction);
+    editMenu->addAction(gridAction);
 
     geometryMenu->addAction(pointAction);
     geometryMenu->addAction(lineAction);
@@ -165,8 +175,6 @@ void MainWindow::createMenu() {
     geometryMenu->addAction(rectAction);
     geometryMenu->addAction(circleAction);
     geometryMenu->addAction(textAction);
-
-    moveMenu->addAction(shearAction);
 }
 
 void MainWindow::createToolBar() {
@@ -244,6 +252,7 @@ void MainWindow::slotOpenFile() {
 void MainWindow::slotNewFile() {
     auto view = new QGraphicsView(mMdiArea);
     auto scene = new Scene;
+    scene->setSceneRect(QRectF(0, 0, 1280, 640));
     connect(scene, SIGNAL(editSignal(QGraphicsItem*)), this, SLOT(slotEditItem(QGraphicsItem*)));
     mScenes.append(scene);
     view->setScene(scene);
@@ -279,12 +288,78 @@ void MainWindow::slotRemoveAll() {
     getScene()->clearAll();
 }
 
+void MainWindow::slotBound(const bool state) {
+    if(getScene()->selectedItems().count() != 1) {
+        return;
+    }
+
+    auto item = getScene()->selectedItems().at(0);
+    QGraphicsRectItem *bound;
+    if(state) {
+        switch (item->type()) {
+        case DotType: bound = getScene()->addRect(qgraphicsitem_cast<Dot*>(item)->getRect());
+            break;
+        case LineType: bound = getScene()->addRect(qgraphicsitem_cast<LineDot*>(item)->getRect());
+            break;
+        case CircleType: bound = getScene()->addRect(qgraphicsitem_cast<CircleDot*>(item)->getRect());
+            break;
+        }
+
+        bounds.append(qMakePair(item, bound));
+    } else {
+
+
+        foreach(auto b, bounds) {
+            if(b.first == item) {
+                getScene()->removeItem(b.second);
+            }
+        }
+    }
+
+    getScene()->update();
+}
+
+void MainWindow::slotOk(const int sh, const int sv) {
+    if(getScene()->selectedItems().isEmpty() || getScene()->selectedItems().count() != 1) {
+        return;
+    }
+
+    auto item = getScene()->selectedItems().at(0);
+    switch (item->type()) {
+    case LineType: qgraphicsitem_cast<LineDot*>(item)->setShear<int>(sh, sv);
+        break;
+    case CircleType: qgraphicsitem_cast<CircleDot*>(item)->setShear(sh, sv);
+        break;
+    case DotType: qgraphicsitem_cast<Dot*>(item)->setShear(sh, sv);
+        break;
+    }
+
+    getScene()->update();
+}
+
+void MainWindow::slotShear() {
+    if(getScene()->selectedItems().isEmpty() || getScene()->selectedItems().count() != 1) {
+        return;
+    }
+
+    auto wgt = new ShearInputWgt();
+    connect(wgt, SIGNAL(emitOk(int, int)), this, SLOT(slotOk(int, int)));
+    connect(wgt, SIGNAL(emitCancel()), this, SLOT(slotCancel()));
+
+
+    workWgtDock = new QDockWidget("Dock", this);
+    addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, workWgtDock);
+    workWgtDock->setWidget(wgt);
+
+
+}
+
 void MainWindow::slotCloseFile() {
 
 }
 
 void MainWindow::slotSaveFile() {
-    auto w = mMdiArea->currentSubWindow();
+    /*auto w = mMdiArea->currentSubWindow();
     if(w == nullptr) {
         return;
     }
@@ -308,7 +383,200 @@ void MainWindow::slotSaveFile() {
 
     scene->gridActivate(true);
     view->scale(7, 7);
+
+*/
+
+
+
+    Scene *resScene = new Scene;
+    resScene->gridActivate(false);
+    resScene->setSceneRect(0, 0, 128, 64);
+
+    //QVector<QRectF*> pixels;
+    QVector<Dot*> pixels;
+    QVector<Dot*> bitMap;
+
+    foreach(auto item, getScene()->items()) {
+        switch (item->type()) {
+        case CircleType: pixels =  qgraphicsitem_cast<CircleDot*>(item)->mapToBitmap();
+            break;
+        case LineType: pixels = qgraphicsitem_cast<LineDot*>(item)->mapToBitmap();
+            break;
+        }
+
+        foreach(auto pixel, pixels) {
+            bitMap.append(pixel);
+        }
+    }
+/*
+    auto resView = new QGraphicsView(mMdiArea);
+    resView->setScene(resScene);
+    resView->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    mMdiArea->addSubWindow(resView);
+    resView->setWindowTitle("Subwindow");
+    resView->show();
+    resView->scale(1, 1);
+
+    auto r = resView->sceneRect().toRect();
+    r.setTopLeft(QPoint(1, 63));
+    r.setWidth(128);
+    r.setHeight(64);
+    QPixmap img = QWidget::grab(r);
+    QString strFilter;
+
+    QPainter pixPainter(&img);
+    auto res = QFileDialog::getSaveFileName(nullptr, tr("Save Pixmap"), "Pixmap", "*.xbm ;; *.jpeg ;; *.bmp", &strFilter);
+    if(strFilter.contains("xbm")) {
+        img.save(res, "xbm");
+    }
+*/
+    auto data = createXbm(bitMap);
+    QFile file;
+    QString strFilter;
+    auto res = QFileDialog::getSaveFileName(nullptr, tr("Save xbm"), "Pixmap", "*.xbm", &strFilter);
+    if(strFilter.contains("xbm")) {
+        file.setFileName(res);
+        if(file.open(QIODevice::WriteOnly)) {
+            file.write(data);
+        }
+
+    }
+
 }
+
+QByteArray MainWindow::createXbm(QVector<Dot *> &pixels) {
+
+    QByteArray array;
+    int count = 0;
+    int bits = 0;/*
+    array.append("#define _width 128\n#define _height 64\nstatic char _bits[] = {\n");
+    for(int i = 0; i < 64; i++) {
+        for(int j = 0; j < 128; j++) {
+            count++;
+            if(pixels.isEmpty()) {
+                if(i == 63 && j == 127) {
+                    array.append("0x00 };");
+                } else {
+                    array.append("0x00, ");
+                }
+            } else {
+                auto p = pixels.first();
+                //count++;
+                if(i == 63 && j == 127) {
+                    if(p->getX() == i && p->getY() == j) {
+                        array.append("0x01 };");
+                        pixels.removeFirst();
+                    } else {
+                        array.append("0x00 };");
+                    }
+                } else {
+                    int x = p->getX();
+                    int y = p->getY();
+                    if(x == j && y == i) {
+                        array.append("0x01, ");
+                        pixels.removeFirst();
+                    } else {
+                        array.append("0x00, ");
+                    }
+                }
+
+            }
+
+            if(count >= 16) {
+                count = 0;
+                array.append("\n");
+            }
+
+        }
+    }
+    */
+
+    array.append("#define _width 128\n#define _height 64\nstatic char _bits[] = {\n");
+    int countStr = 0;
+    int countPixel = 0;
+
+    for(int i = 0; i < 64; i++) {
+        for(int j = 0; j < 16; j++) {
+            count++;
+            if(pixels.isEmpty()) {
+                if(i == 63 && j == 15) {
+                    array.append("0x00 };");
+                } else {
+                    array.append("0x00, ");
+                }
+            } else {
+                foreach(auto p, pixels) {
+                    int x = p->getX();
+                    int y = p->getY();
+                    if(i == 63 && j == 15) {
+                        if(p->getX() == i && p->getY() == j) {
+                            array.append("0xFF };");
+                            pixels.removeFirst();
+                        } else {
+                            array.append("0x00 };");
+                        }
+                    } else {
+                        int x = p->getX();
+                        int y = p->getY();
+                        if(x == j && y == i) {
+                            array.append("0xFF, ");
+                            pixels.removeFirst();
+                        } else {
+                            array.append("0x00, ");
+                        }
+                    }
+                }
+            }
+            if(count >= 16) {
+                count = 0;
+                array.append("\n");
+            }
+        }
+    }
+/*
+    for(int i = 0; i < 64; i++) {
+        for(int j = 0; j < 16; j++) {
+            count++;
+            if(pixels.isEmpty()) {
+                if(i == 63 && j == 15) {
+                    array.append("0x00 };");
+                } else {
+                    array.append("0x00, ");
+                }
+            } else {
+                auto p = pixels.first();
+                //count++;
+                if(i == 63 && j == 15) {
+                    if(p->getX() == i && p->getY() == j) {
+                        array.append("0xFF };");
+                        pixels.removeFirst();
+                    } else {
+                        array.append("0x00 };");
+                    }
+                } else {
+                    int x = p->getX();
+                    int y = p->getY();
+                    if(x == j && y == i) {
+                        array.append("0xFF, ");
+                        pixels.removeFirst();
+                    } else {
+                        array.append("0x00, ");
+                    }
+                }
+
+            }
+
+            if(count >= 16) {
+                count = 0;
+                array.append("\n");
+            }
+
+        }
+    }
+*/
+    return array;
+}
+
 
 void MainWindow::slotExit() {
 
@@ -409,7 +677,11 @@ void MainWindow::slotClearBut() {
 
 void MainWindow::startInput() {
     //m_scene->setTypeMode(m_mode);
+    if(m_type == ItemType::Point) {
+
+    }
     wgt = new WorkWidget(this, m_type);
+   // wgt = new PointInputWgt();
   //  auto l = ui->widget->layout();
     //l->addWidget(wgt);
     connect(wgt, SIGNAL(stop()), this, SLOT(slotStop()));
@@ -439,7 +711,7 @@ void MainWindow::startInput() {
             break;
         }
         currentData = data;
-        wgt->setItemData(data);
+        //wgt->setItemData(data);
     } /*else if(m_type == ItemType::Text) {
         TextItemDialog dialog(0, QPoint(), getScene());
         if(dialog.exec()) {
@@ -467,6 +739,7 @@ void MainWindow::slotPointBut() {
     changeMode(Mode::Input);
     changeType(ItemType::Point);
     getScene()->update();
+    startInput();
 }
 void MainWindow::slotLineBut() {
     if(m_mode == Mode::Input || m_mode == Mode::Edit) {
@@ -518,11 +791,20 @@ void MainWindow::slotPolylineBut() {
 void MainWindow::slotStop() {
     if(m_mode == Mode::Edit) {
         getScene()->removeItem(currentItem);
-        wgt->checkData();
+      //  wgt->checkData();
         getScene()->addShape(currentData);
     }
     delete wgt;
     delete workWgtDock;
+    changeMode(Mode::Normal);
+}
+
+void MainWindow::slotCancel() {
+    if(m_mode == Mode::Edit) {
+        getScene()->removeItem(currentItem);
+        //wgt->checkData();
+        getScene()->addShape(currentData);
+    }
     changeMode(Mode::Normal);
 }
 
@@ -655,13 +937,16 @@ void MainWindow::slotBind(bool state) {
     getScene()->bindActivate(state);
 }
 
-void MainWindow::slotGrid(int state) {
-    switch (state) {
+void MainWindow::slotGrid(bool state) {
+    qDebug() << state;
+    getScene()->gridActivate(state);
+
+    /*switch (state) {
     case Qt::Checked: getScene()->gridActivate(true);
         break;
     case Qt::Unchecked: getScene()->gridActivate(false);
         break;
-    }
+    }*/
 }
 
 void MainWindow::slotSceneGetPoint(const QPointF &p) {
@@ -669,12 +954,12 @@ void MainWindow::slotSceneGetPoint(const QPointF &p) {
         return;
     }
 
-    wgt->setPoint(p);
+    //wgt->setPoint(p);
 }
 
 void MainWindow::slotSceneEndInput() {
     getScene()->update();
     if(wgt != nullptr) {
-        wgt->endInput();
+      //  wgt->endInput();
     }
 }
