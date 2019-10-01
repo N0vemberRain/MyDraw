@@ -691,7 +691,6 @@ void MainWindow::slotCheck() {
     }
     auto items = getScene()->selectedItems();
 
-    int d = 5;
 }
 
 void MainWindow::slotCheckRect() {
