@@ -13,6 +13,7 @@
 #include <QFileDialog>
 #include <math.h>
 #include <QGraphicsView>
+#include <QDebug>
 
 #include "types.h"
 
@@ -54,6 +55,9 @@ MainWindow::MainWindow(QWidget *parent) :
     createToolBar();
     createMdiArea();
 
+    connect(rectAction, &QAction::triggered, this, [=]() {
+        qDebug() << "Lambda!";
+    });
     //m_scene = new QGraphicsScene(QRect(0, 0, 100, 100));
  //   m_scene = new Scene;
    // connect(m_scene, SIGNAL(editSignal(QGraphicsItem*)), this, SLOT(slotEditItem(QGraphicsItem*)));
@@ -218,6 +222,57 @@ void MainWindow::createMdiArea() {
     ui->mdiArea->setTabShape(QTabWidget::Triangular);
     ui->mdiArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     ui->mdiArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+}
+
+void MainWindow::createConnection() {
+
+}
+
+void MainWindow::createDockInputWgt() {
+    dockInputWgt = new QDockWidget("Dock", this);
+    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, dockInputWgt);
+    dockInputWgt->setWidget(inWgt);
+    dockInputWgt->setStyleSheet("background: grb(25, 25, 25);");
+
+    connect(inWgt, &InputWgt::okSignal, this, [this]() {
+        getScene()->setTypeMode(Mode::Input);
+        auto data = this->inWgt->getData();
+        getScene()->addShape(data);
+        qDebug() << "Lambda Ok!";
+    });
+
+    connect(inWgt, &InputWgt::cancelSignal, this, [this]() {
+        if(m_mode == Mode::Edit) {
+            getScene()->removeItem(currentItem);
+            getScene()->addShape(currentData);
+        }
+        delete this->inWgt;
+        delete this->dockInputWgt;
+        changeMode(Mode::Normal);
+        qDebug() << "Lambda cancel!";
+    });
+}
+
+void MainWindow::createInputWgt() {
+    /*InputWgt **/inWgt = nullptr;
+    switch (mCurrentType) {
+    case LineType: inWgt = createInputWgt(new LineInputFactory);
+        break;
+    case RectType: inWgt = createInputWgt(new RectInputFactory);
+        break;
+    case PointType: inWgt = createInputWgt(new PointInputFactory);
+        break;
+    case PolylineType: inWgt = createInputWgt(new PolylineInputFactory);
+        break;
+    case CircleType: inWgt = createInputWgt(new CircleInputFactory);
+        break;
+    case TextType: inWgt = createInputWgt(new TextInputFactory);
+        break;
+    }
+
+    if(inWgt != nullptr) {
+        createDockInputWgt();
+    }
 }
 
 Scene* MainWindow::getScene() {
@@ -427,43 +482,15 @@ void MainWindow::slotClearBut() {
 }*/
 
 void MainWindow::startInput() {
-    //m_scene->setTypeMode(m_mode);
-   // wgt = new WorkWidget(this, m_type);
-  //  auto l = ui->widget->layout();
-    //l->addWidget(wgt);
-   /* connect(wgt, SIGNAL(stop()), this, SLOT(slotStop()));
-    connect(wgt, SIGNAL(create()), this, SLOT(slotCreate()));
-    connect(getScene(), SIGNAL(getPointSignal(const QPointF&)), this, SLOT(slotSceneGetPoint(const QPointF&)));
-    connect(getScene(), SIGNAL(endInputSignal()), this, SLOT(slotSceneEndInput()));
+    createInputWgt();
 
-    workWgtDock = new QDockWidget("Dock", this);
-    addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, workWgtDock);
-    workWgtDock->setWidget(wgt);
-*/
-    InputWgt *inWgt = nullptr;
-    switch (m_type) {
-    case ItemType::Line: inWgt = createInputWgt(new LineInputFactory);
-        break;
-    case ItemType::Rect: inWgt = createInputWgt(new RectInputFactory);
-        break;
-    }
-
-    if(inWgt != nullptr) {
-        auto dock = new QDockWidget("Dock", this);
-        addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, dock);
-        dock->setWidget(inWgt);
-        dock->setStyleSheet("background: grb(25, 25, 25);");
-    }
-
-    connect(inWgt, SIGNAL(okSignal(QStringList data)), this, SLOT([=](QStringList data){
-        getScene()->setTypeMode(Mode::Input);
-        getScene()->addShape(data);
-    }));
+    //connect(comboBox, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged),
+    //[=](const QString &text){ });
 
     QStringList data;
     if(m_mode == Mode::Edit) {
-        auto type = currentItem->type();
-        switch (type) {
+        //auto type = currentItem->type();
+        switch (mCurrentType) {
         case RectType: data = qgraphicsitem_cast<RectItem*>(currentItem)->getData();
             break;
         case CircleType: data = qgraphicsitem_cast<CircleItem*>(currentItem)->getData();
@@ -475,6 +502,7 @@ void MainWindow::startInput() {
         case TextType: data = qgraphicsitem_cast<TextItem*>(currentItem)->getData();
          //   qgraphicsitem_cast<Text*>(currentItem)->edit();
             break;
+        //case PointType: data = qgraphicsitem_cast<Point*>(currentItem);
         }
         currentData = data;
         //wgt->setItemData(data);
@@ -493,6 +521,7 @@ void MainWindow::slotTextBut() {
     }
     changeType(ItemType::Text);
     changeMode(Mode::Input);
+    mCurrentType = TextType;
     startInput();
 }
 
@@ -504,6 +533,8 @@ void MainWindow::slotPointBut() {
 
     changeMode(Mode::Input);
     changeType(ItemType::Point);
+    mCurrentType = PointType;
+    startInput();
     getScene()->update();
 }
 void MainWindow::slotLineBut() {
@@ -514,6 +545,7 @@ void MainWindow::slotLineBut() {
 
     changeMode(Mode::Input);
     changeType(ItemType::Line);
+    mCurrentType = LineType;
     startInput();
 }
 void MainWindow::slotCircleBut() {
@@ -524,6 +556,7 @@ void MainWindow::slotCircleBut() {
 
     changeMode(Mode::Input);
     changeType(ItemType::Circle);
+    mCurrentType = CircleType;
     startInput();
 }
 void MainWindow::slotRectBut() {
@@ -540,6 +573,7 @@ void MainWindow::slotRectBut() {
 
     changeMode(Mode::Input);
     changeType(ItemType::Rect);
+    mCurrentType = RectType;
     startInput();
 }
 void MainWindow::slotPolylineBut() {
@@ -556,7 +590,7 @@ void MainWindow::slotPolylineBut() {
 void MainWindow::slotStop() {
     if(m_mode == Mode::Edit) {
         getScene()->removeItem(currentItem);
-        wgt->checkData();
+        //wgt->checkData();
         getScene()->addShape(currentData);
     }
     delete wgt;
@@ -568,15 +602,17 @@ void MainWindow::slotCreate() {
 
     auto scene = getScene();
     if(m_mode == Mode::Input) {
-        auto data = wgt->getData(m_type);
+        auto data = inWgt->getData();
         //m_scene->setTypeMode(Mode::Input);
         //m_scene->addShape(data);
         scene->setTypeMode(Mode::Input);
         scene->addShape(data);
+        mMomentoList.append(scene->createMomento());
+
 
     } else if(m_mode == Mode::Edit) {
         scene->removeItem(currentItem);
-        auto data = wgt->getData(m_type);
+        auto data = inWgt->getData();
         scene->setTypeMode(Mode::Edit);
         scene->addShape(data);
         //m_scene->setTypeMode(Mode::Edit);
@@ -707,12 +743,18 @@ void MainWindow::slotSceneGetPoint(const QPointF &p) {
         return;
     }
 
-    wgt->setPoint(p);
+//    wgt->setPoint(p);
 }
 
 void MainWindow::slotSceneEndInput() {
     getScene()->update();
     if(wgt != nullptr) {
-        wgt->endInput();
+        //wgt->endInput();
     }
 }
+
+void MainWindow::undo() {
+    getScene()->createMomento(mMomentoList.back());
+}
+
+//D как A на 5 ладу, C#m как Em на 4 ладу, Dsus2 как A на 5 ладу

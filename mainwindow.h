@@ -47,11 +47,17 @@ private:
     void createMenu();
     void createToolBar();
     void createMdiArea();
+    void createConnection();
+    void createDockInputWgt();
+    void createInputWgt();
     void startInput(const ItemType type);
     void startInput();
     void setItemData(const QStringList &data);
     void changeMode(const Mode mode);
     void changeType(const ItemType type);
+
+    void undo();
+    void redo();
 
     InputWgt* createInputWgt(InputFactory *factory) {
         return factory->factoryMethod();
@@ -69,10 +75,13 @@ private:
     QVector<Scene*> mScenes;
    // DrawFactory *m_factory;
     ItemType m_type;
+    int mCurrentType;
     Mode m_mode;
     WorkWidget *wgt;
     QGraphicsItem *currentItem;
     QStringList currentData;
+    QDockWidget *dockInputWgt;
+    InputWgt *inWgt;
 
     QString tmpText;
 
@@ -94,6 +103,9 @@ private:
     QDockWidget *workWgtDock;
 
     QMdiArea *mMdiArea;
+
+    QList<QAction*> mActionList;
+    QList<SceneMomento*> mMomentoList;
 
 private slots:
     void slotTextBut();

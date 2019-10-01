@@ -381,12 +381,14 @@ void Scene::slotAddPoint(const int x, const int y) {
 void Scene::drawLine() {
     if(waitingPoint) {
         if(pointsVec.count() == 2) {
-            auto p1 = findDot(pointsVec.at(0));
-            auto p2 = findDot(pointsVec.at(1));
-            LineDot *line = new LineDot(p1.first, p1.second, p2.first, p2.second);
+            //auto p1 = findDot(pointsVec.at(0));
+            //auto p2 = findDot(pointsVec.at(1));
+            auto l = new Line(pointsVec.at(0), pointsVec.at(1));
+            //LineDot *line = new LineDot(p1.first, p1.second, p2.first, p2.second);
             //auto points = line->getLine();
             //map.addLine(points);
-            addItem(line);
+            addItem(l);
+            mCurrentState = l;
           //  addRect(line->getRect());
             pointsVec.clear();
             waitingPoint = false;
@@ -553,7 +555,7 @@ void Scene::addShape(const QStringList &list) {
     pointsVec.clear();
     switch (m_type) {
     case ItemType::Point: setPointData(list); break;
-    case ItemType::Line: setLineDotData(list); break;
+    case ItemType::Line: setLineData(list); break;
     case ItemType::Circle: setCircleDotData(list); break;
     case ItemType::Rect: setRectData(list); break;
     case ItemType::Polyline: drawPolyline(); break;

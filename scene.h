@@ -15,6 +15,7 @@
 #include "selectarea.h"
 #include "text.h"
 #include "pixmap.h"
+#include "scenemomento.h"
 
 
 class Grid : public QObject, public QGraphicsRectItem {
@@ -125,6 +126,13 @@ public:
     void setText(const QString &text) {
         tmpText = text;
     }
+
+    SceneMomento* createMomento() {
+        return new SceneMomento(mCurrentState);
+    }
+    void reinstateMomento(SceneMomento *momento) {
+        mCurrentState = momento->mState;
+    }
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *pe);
     void wheelEvent(QGraphicsSceneWheelEvent *pe);
@@ -194,6 +202,10 @@ private:
     bool waitingText;
     QString tmpText;
 
+
+    QGraphicsItem *mCurrentState;
+
+
 signals:
     QGraphicsItem* editSignal(QGraphicsItem *item);
     QGraphicsItem* moveSignal(QGraphicsItem *item);
@@ -201,5 +213,45 @@ signals:
     QPointF getPointSignal(const QPointF &p);
     void endInputSignal();
 };
+
+/*class SceneCommand {
+public:
+    SceneCommand(Scene *receiver, QAction *action)
+        : mReceiver(receiver), mAction(action) {
+
+    }
+
+    void undo() {
+        if (mNumCommands == 0) {
+            return;
+        }
+        mCommandList.at(mNumCommands - 1)->mReceiver->reinstateMomento(
+                    mMementoList.at(mNumCommands - 1)
+                );
+        mNumCommands--;
+
+    }
+
+    void redo() {
+        if (mNumCommands > mHighWater) {
+            return ;
+        }
+
+        mCommandList.at(mNumCommands)->mReceiver->
+
+        (mCommandList[mNumCommands]->mReceiver->*(mCommandList[mNumCommands]
+                  ->mAction))();
+                mNumCommands++;
+    }
+
+private:
+    Scene *mReceiver;
+    QAction *mAction;
+    static QList<SceneCommand*> mCommandList;
+    static QList<SceneMomento*> mMementoList;
+    static int mNumCommands;
+    static int mHighWater;
+    QList<int> l;
+};*/
 
 #endif // SCENE_H

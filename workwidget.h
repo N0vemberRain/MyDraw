@@ -7,6 +7,7 @@
 #include <QLineEdit>
 #include <QVBoxLayout>
 #include <QComboBox>
+#include <QTextEdit>
 
 #include "types.h"
 
@@ -44,6 +45,9 @@ public:
         return mLayout;
     }
 
+    virtual QStringList getData() const = 0;
+    virtual void setData(const QStringList &data) = 0;
+    virtual void addStyleSheet() = 0;
 private slots:
     virtual void slotOk() = 0;
     virtual void slotCancel() = 0;
@@ -53,6 +57,10 @@ private:
     QPushButton *mCancelButton;
     QGridLayout *mLayout;
 
+signals:
+   // virtual void okSignal(const QStringList &data);
+    void okSignal();
+    void cancelSignal();
 };
 
 class FormInputWgt : public InputWgt {
@@ -75,22 +83,28 @@ public:
 
     virtual ~FormInputWgt() {}
 
+    virtual QStringList getData() const = 0;
+    virtual void setData(const QStringList &data) = 0;
+    virtual void addStyleSheet() = 0;
 protected:
     QString getPosX() const { return mPosXLine->text(); }
     QString getPosY() const { return mPosYLine->text(); }
+
+    void setPosX(const QString &pos) { mPosXLine->setText(pos); }
+    void setPosY(const QString &pos) { mPosYLine->setText(pos); }
 
 private slots:
     virtual void slotOk();
     virtual void slotCancel();
 private:
-    virtual QStringList prepareData() const = 0;
     QLabel *mPosLabel;
     QLineEdit *mPosXLine;
     QLineEdit *mPosYLine;
 
 signals:
-    void okSignal(const QStringList &data);
-    void cancelSignal();
+    //void okSignal(const QStringList &data);
+    //void okSignal();
+    //void cancelSignal();
 };
 
 class LineInputWgt : public FormInputWgt {
@@ -119,7 +133,9 @@ public:
 
     virtual ~LineInputWgt() {}
 
-    virtual QStringList prepareData() const;
+    virtual QStringList getData() const;
+    virtual void setData(const QStringList &data);
+    virtual void addStyleSheet();
 private slots:
     virtual void slotOk();
     virtual void slotCancel();
@@ -167,8 +183,9 @@ public:
 
     virtual ~RectInputWgt() {}
 
-    virtual QStringList prepareData() const;
-
+    virtual QStringList getData() const;
+    virtual void setData(const QStringList &data);
+    virtual void addStyleSheet();
 private slots:
     virtual void slotOk();
     virtual void slotCancel();
@@ -182,6 +199,83 @@ private:
     QLineEdit *mHeightLine;
 };
 
+class CircleInputWgt : public FormInputWgt {
+    Q_OBJECT
+public:
+    explicit CircleInputWgt();
+    virtual ~CircleInputWgt() {}
+
+    virtual QStringList getData() const;
+    virtual void setData(const QStringList &data);
+    virtual void addStyleSheet();
+private slots:
+    virtual void slotOk();
+    virtual void slotCancel();
+private:
+    QLabel *mRPLabel;
+    QLineEdit *mRPXLine;
+    QLineEdit *mRPYLine;
+    QLabel *mRLabel;
+    QLineEdit *mRLine;
+};
+
+class PointInputWgt : public FormInputWgt {
+    Q_OBJECT
+public:
+    explicit PointInputWgt();
+    ~PointInputWgt() {}
+
+    virtual QStringList getData() const;
+    virtual void setData(const QStringList &data);
+    virtual void addStyleSheet();
+
+private slots:
+    virtual void slotOk();
+    virtual void slotCancel();
+
+private:
+
+
+};
+
+class PolylineInputWgt : public FormInputWgt {
+    Q_OBJECT
+public:
+    explicit PolylineInputWgt();
+    ~PolylineInputWgt() {}
+
+    virtual QStringList getData() const;
+    virtual void setData(const QStringList &data);
+    virtual void addStyleSheet();
+
+private slots:
+    virtual void slotOk();
+    virtual void slotCancel();
+
+private:
+
+};
+
+class TextInputWgt : public FormInputWgt {
+    Q_OBJECT
+public:
+    explicit TextInputWgt();
+    ~TextInputWgt() {}
+
+    virtual QStringList getData() const;
+    virtual void setData(const QStringList &data);
+    virtual void addStyleSheet();
+
+private slots:
+    virtual void slotOk();
+    virtual void slotCancel();
+
+private:
+    QTextEdit *mTextEdit;
+};
+
+
+
 class InputFactory : public QWidget {
     Q_OBJECT
 public:
@@ -193,6 +287,7 @@ public:
 private:
 
 };
+
 
 class ShearInputFactory : public InputFactory {
     Q_OBJECT
@@ -231,92 +326,52 @@ private:
 
 };
 
-class WorkWidget : public QWidget
-{
+class CircleInputFactory : public InputFactory {
     Q_OBJECT
 public:
-    explicit WorkWidget(QWidget *parent = nullptr, const ItemType type = ItemType::Point);
+    explicit CircleInputFactory() : InputFactory () {}
+    ~CircleInputFactory() {}
 
-    void makePointWgt();
-    void makeLineWgt();
-    void makeRectWgt();
-    void makeCircleWgt();
-    void makePolylineWgt();
-    void makeTextWgt();
-
-    void checkData();
-    void checkRectData();
-    void checkCircleData();
-
-    QStringList getData(const ItemType type);
-    void setItemData(const QStringList &data);
-
-    void setPoint(const QPointF &p);
-    void endInput();
-
-   /* QString getText() {
-        while (waitText) {
-            ;
-        }
-        waitText = true;
-        return widthEdit->text();
-    }*/
-private:
-    QStringList getPointData();
-    QStringList getLineData();
-    QStringList getRectData();
-    QStringList getCircleData();
-    QStringList getPolylineData();
-    QStringList getTextData();
-
-    void setPointData(const QStringList &data);
-    void setLineData(const QStringList &data);
-    void setPolylineData(const QStringList &data);
-    void setRectData(const QStringList &data);
-    void setCircleData(const QStringList &data);
-    void setTextData(const QStringList &data);
-
-    void changeRectWay(const int index);
-    void changeCircleWay(const int index);
-
-    QPushButton *createBut;
-    QPushButton *stopBut;
-    QLabel *pointOne;
-    QLabel *pointTwo;
-    QLabel *width;
-    QLabel *height;
-    QLineEdit *pointOneEditX;
-    QLineEdit *pointOneEditY;
-    QLineEdit *pointTwoEditX;
-    QLineEdit *pointTwoEditY;
-    QLineEdit *widthEdit;
-    QLineEdit *heightEdit;
-    QComboBox *changeWay;
-    QComboBox *fontHeight;
-
-    QHBoxLayout *layout;
-
-    ItemType type;
-
-    bool waitText;
-signals:
-    void stop();
-    void create();
-
-    void dataChanged();
-public slots:
-    void slotCreate();
-    void slotStop();
-
-private slots:
-    void slotChangeData();
-    void slotChangeData(const QString &text);
-    void slotChangeRectData();
-    void slotChangeWay(const int index);
-   /* void slotEditingFinished() {
-        waitText = false;
-    }*/
+    FormInputWgt* factoryMethod() {
+        return new CircleInputWgt;
+    }
 };
 
+class PointInputFactory : public InputFactory {
+    Q_OBJECT
+public:
+    explicit PointInputFactory() : InputFactory () {}
+    ~PointInputFactory() {}
 
-#endif // WORKWIDGET_H
+    FormInputWgt* factoryMethod() {
+        return new PointInputWgt;
+    }
+};
+
+class PolylineInputFactory : public InputFactory {
+    Q_OBJECT
+public:
+    explicit PolylineInputFactory() : InputFactory () {}
+    ~PolylineInputFactory() {}
+
+    FormInputWgt* factoryMethod() {
+        return new PolylineInputWgt;
+    }
+};
+
+class TextInputFactory : public InputFactory {
+    Q_OBJECT
+public:
+    explicit TextInputFactory() : InputFactory () {}
+    ~TextInputFactory() {}
+
+    FormInputWgt* factoryMethod() {
+        return new TextInputWgt;
+    }
+};
+
+class WorkWidget {
+
+};
+
+#endif //WORKWIDGET_H

@@ -4,14 +4,22 @@
 
 
 void FormInputWgt::slotOk() {
-    emit okSignal(prepareData());
+    emit okSignal(/*prepareData()*/);
 }
 
 void FormInputWgt::slotCancel() {
     emit cancelSignal();
 }
 
-QStringList LineInputWgt::prepareData() const {
+void LineInputWgt::slotOk() {
+    emit okSignal(/*prepareData()*/);
+}
+
+void LineInputWgt::slotCancel() {
+    emit cancelSignal();
+}
+
+QStringList LineInputWgt::getData() const {
     QStringList data;
     data << "P1" << FormInputWgt::getPosX() << FormInputWgt::getPosY() <<
             "P2" << mEndXLine->text() << mEndYLine->text();
@@ -19,27 +27,265 @@ QStringList LineInputWgt::prepareData() const {
     return data;
 }
 
-void LineInputWgt::slotOk() {
-    emit okSignal(prepareData());
+void LineInputWgt::setData(const QStringList &data) {
+    if(data.at(0).toInt() != LineType) {
+        return;
+    }
+
+    for(int i = 0; i < data.count(); i++) {
+        if(data.at(i) == "P1") {
+            FormInputWgt::setPosX(data.at(i + 1));
+            FormInputWgt::setPosY(data.at(i + 2));
+            continue;
+        }
+        if(data.at(i) == "P2") {
+            mEndXLine->setText(data.at(i + 1));
+            mEndYLine->setText(data.at(i + 2));
+            continue;
+        }
+    }
 }
 
-void LineInputWgt::slotCancel() {
-    emit cancelSignal();
-}
-
-
-QStringList RectInputWgt::prepareData() const {
+void LineInputWgt::addStyleSheet() {
 
 }
 
 void RectInputWgt::slotOk() {
-    emit okSignal(prepareData());
+    emit okSignal(/*prepareData()*/);
 }
 
 void RectInputWgt::slotCancel() {
     emit cancelSignal();
 }
 
+QStringList RectInputWgt::getData() const {
+    QStringList data;
+    data << QString::number(RectType) << "P1" << FormInputWgt::getPosX() << FormInputWgt::getPosY()
+         << "P2" << mEndXLine->text() << mEndYLine->text()
+         << "W" << mWidthLine->text() << "H" << mHeightLine->text();
+
+    return data;
+}
+
+void RectInputWgt::setData(const QStringList &data) {
+    if(data.at(0).toInt() != LineType) {
+        return;
+    }
+
+    for(int i = 0; i < data.count(); i++) {
+        if(data.at(i) == "P1") {
+            FormInputWgt::setPosX(data.at(i + 1));
+            FormInputWgt::setPosY(data.at(i + 2));
+            continue;
+        }
+        if(data.at(i) == "P2") {
+            mEndXLine->setText(data.at(i + 1));
+            mEndYLine->setText(data.at(i + 2));
+            continue;
+        }
+        if(data.at(i) == "W") {
+            mWidthLine->setText(data.at(i + 1));
+            continue;
+        }
+        if(data.at(i) == "H") {
+            mHeightLine->setText(data.at(i + 1));
+            continue;
+        }
+    }
+}
+
+void RectInputWgt::addStyleSheet() {
+
+}
+
+CircleInputWgt::CircleInputWgt()
+    : FormInputWgt () {
+    mRPLabel = new QLabel(tr("&Точка R"));
+    createLabel(mRPLabel);
+    mRPXLine = new QLineEdit();
+    mRPYLine = new QLineEdit();
+    mRPLabel->setBuddy(mRPXLine);
+    mRPLabel->setBuddy(mRPYLine);
+
+    mRLabel = new QLabel(tr("&Радиус"));
+    createLabel(mRLabel);
+    mRLine = new QLineEdit();
+    mRLabel->setBuddy(mRLine);
+
+    getLayout()->addWidget(mRPLabel, 3, 0, 1, 2);
+    getLayout()->addWidget(mRPXLine, 4, 0);
+    getLayout()->addWidget(mRPYLine, 4, 1);
+    getLayout()->addWidget(mRLabel, 5, 0);
+    getLayout()->addWidget(mRLine, 5, 1);
+
+    setLayout(getLayout());
+
+    for(int i = 0; i < getLayout()->rowCount(); i++) {
+        getLayout()->setRowStretch(i, 1);
+    }
+}
+
+void CircleInputWgt::slotOk() {
+    emit okSignal();
+}
+
+void CircleInputWgt::slotCancel() {
+    emit cancelSignal();
+}
+
+QStringList CircleInputWgt::getData() const {
+    QStringList data;
+    data << QString::number(CircleType) << "P1" << FormInputWgt::getPosX() << FormInputWgt::getPosY()
+         << "P2" << mRPXLine->text() << mRPYLine->text()
+         << "R" << mRLine->text();
+
+    return data;
+}
+
+void CircleInputWgt::setData(const QStringList &data) {
+    if(data.at(0).toInt() != CircleType) {
+        return;
+    }
+
+    for(int i = 0; i < data.count(); i++) {
+        if(data.at(i) == "P1") {
+            FormInputWgt::setPosX(data.at(i + 1));
+            FormInputWgt::setPosY(data.at(i + 2));
+            continue;
+        }
+        if(data.at(i) == "P2") {
+            mRPXLine->setText(data.at(i + 1));
+            mRPYLine->setText(data.at(i + 2));
+            continue;
+        }
+        if(data.at(i) == "W") {
+            mRLine->setText(data.at(i + 1));
+            continue;
+        }
+    }
+}
+
+void CircleInputWgt::addStyleSheet() {
+
+}
+
+PointInputWgt::PointInputWgt()
+    : FormInputWgt () {
+    setLayout(getLayout());
+}
+
+void PointInputWgt::slotOk() {
+    emit okSignal();
+}
+
+void PointInputWgt::slotCancel() {
+    emit cancelSignal();
+}
+
+QStringList PointInputWgt::getData() const {
+    QStringList data;
+    data << QString::number(PointType) << FormInputWgt::getPosX() << FormInputWgt::getPosY();
+
+    return data;
+}
+
+void PointInputWgt::setData(const QStringList &data) {
+    if(data.at(0).toInt() != PointType) {
+        return;
+    }
+
+    for(int i = 0; i < data.count(); i++) {
+        if(data.at(i) == "P") {
+            FormInputWgt::setPosX(data.at(i + 1));
+            FormInputWgt::setPosY(data.at(i + 2));
+        }
+    }
+}
+
+void PointInputWgt::addStyleSheet() {
+
+}
+
+
+PolylineInputWgt::PolylineInputWgt()
+    : FormInputWgt () {
+    setLayout(getLayout());
+}
+
+void PolylineInputWgt::slotOk() {
+    emit okSignal();
+}
+
+void PolylineInputWgt::slotCancel() {
+    emit cancelSignal();
+}
+
+
+QStringList PolylineInputWgt::getData() const {
+    QStringList data;
+    data << QString::number(PolylineType) << FormInputWgt::getPosX() << FormInputWgt::getPosY();
+
+    return data;
+}
+
+void PolylineInputWgt::setData(const QStringList &data) {
+    if(data.at(0).toInt() != PolylineType) {
+        return;
+    }
+
+    for(int i = 0; i < data.count(); i++) {
+        if(data.at(i) == "P") {
+            FormInputWgt::setPosX(data.at(i + 1));
+            FormInputWgt::setPosY(data.at(i + 2));
+        }
+    }
+}
+
+void PolylineInputWgt::addStyleSheet() {
+
+}
+
+
+TextInputWgt::TextInputWgt()
+    : FormInputWgt () {
+    mTextEdit = new QTextEdit;
+    getLayout()->addWidget(mTextEdit, 1, 0, 1, 2);
+
+    setLayout(getLayout());
+}
+
+void TextInputWgt::slotOk() {
+    emit okSignal();
+}
+
+void TextInputWgt::slotCancel() {
+    emit cancelSignal();
+}
+
+
+QStringList TextInputWgt::getData() const {
+    QStringList data;
+    data << QString::number(TextType) << FormInputWgt::getPosX() << FormInputWgt::getPosY();
+
+    return data;
+}
+
+void TextInputWgt::setData(const QStringList &data) {
+    if(data.at(0).toInt() != TextType) {
+        return;
+    }
+
+    for(int i = 0; i < data.count(); i++) {
+        if(data.at(i) == "P") {
+            FormInputWgt::setPosX(data.at(i + 1));
+            FormInputWgt::setPosY(data.at(i + 2));
+        }
+    }
+}
+
+void TextInputWgt::addStyleSheet() {
+
+}
 
 
 
@@ -49,20 +295,7 @@ void RectInputWgt::slotCancel() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/*
 WorkWidget::WorkWidget(QWidget *parent, const ItemType type) : QWidget(parent), type(type)
 {
     createBut = new QPushButton("&Создать");
@@ -350,7 +583,7 @@ void WorkWidget::setLineData(const QStringList &data) {
             heightEdit->setText(data.at(i + 1));
             i++;
             continue;
-        }*/
+        }
     }
 }
 
@@ -556,3 +789,4 @@ void WorkWidget::endInput() {
         heightEdit->clear();
     }
 }
+*/

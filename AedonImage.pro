@@ -35,6 +35,7 @@ SOURCES += \
     polyline.cpp \
     rect.cpp \
     circle.cpp \
+    scenemomento.cpp \
     workwidget.cpp \
     selectarea.cpp \
     text.cpp \
@@ -44,6 +45,7 @@ SOURCES += \
 HEADERS += \
         mainwindow.h \
     scene.h \
+    scenemomento.h \
     types.h \
     point.h \
     line.h \
