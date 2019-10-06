@@ -164,7 +164,7 @@ public:
 
     void setMouseEvent(QGraphicsSceneMouseEvent *pe) {
         if(pe->type() == QEvent::GraphicsSceneMouseMove) {
-            mouseMoveEvent(pe);
+           // mouseMoveEvent(pe);
         }
         if(pe->type() == QEvent::GraphicsSceneMousePress) {
             mousePressEvent(pe);

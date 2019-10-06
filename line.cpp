@@ -27,6 +27,9 @@ QRectF Line::boundingRect() const {
 }
 
 void Line::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+    if(this->isSelected()) {
+        mPen->setColor(Qt::red);
+    }
     painter->setPen(*mPen);
     QPainterPath path(mLine.p1());
     path.lineTo(mLine.p2());

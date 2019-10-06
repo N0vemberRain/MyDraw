@@ -131,7 +131,14 @@ public:
         return new SceneMomento(mCurrentState);
     }
     void reinstateMomento(SceneMomento *momento) {
-        mCurrentState = momento->mState;
+        auto list = items();
+        this->removeItem(momento->mState);
+        mCurrentState = this->items().last();      //auto items = this->items();
+        /*auto i = items.indexOf(mCurrentState);
+        items.removeAt(i);
+        //mCurrentState = items.last();
+        mCurrentState = momento->mState;*/
+        update();
     }
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *pe);

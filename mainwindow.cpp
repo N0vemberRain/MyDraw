@@ -17,31 +17,6 @@
 
 #include "types.h"
 
-//Line::Line(const QPointF &p1, const QPointF &p2)
-  //  : points.
-
-
-static int randomBetween(int low, int high)
-{
-    return (qrand() % ((high + 1) - low) + low);
-}
-
-
-
-
-
-DrawFactory::DrawFactory(QObject *parent)
-    : QObject (parent) {
-    state = true;
-}
-
-DrawFactory::~DrawFactory() {
-
-}
-
-void DrawFactory::draw(const ItemType type, QGraphicsScene *scene, QGraphicsItem *item) {
-
-}
 
 
 
@@ -142,6 +117,9 @@ void MainWindow::createMenu() {
     removeAllAction = new QAction(tr("&Удалить все"), this);
     bindAction = new QAction(tr("&Привязка"), this);
     bindAction->setCheckable(true);
+    redoAction = new QAction(tr("&Вперед"));
+    undoAction = new QAction(tr("&Назад"));
+    checkAction = new QAction(tr("Check"));
 
     connect(newFileAction, SIGNAL(triggered()), this, SLOT(slotNewFile()));
     connect(openFileAction, SIGNAL(triggered()), this, SLOT(slotOpenFile()));
@@ -159,6 +137,19 @@ void MainWindow::createMenu() {
     connect(removeAction, SIGNAL(triggered()), this, SLOT(slotRemove()));
     connect(removeAllAction, SIGNAL(triggered()), this, SLOT(slotRemoveAll()));
     connect(bindAction, SIGNAL(triggered(bool)), this, SLOT(slotBind(bool)));
+    connect(redoAction, SIGNAL(triggered()), this, SLOT(redo()));
+    connect(undoAction, &QAction::triggered, this, [this]() {
+        mSceneComd->undo();
+    });
+    connect(checkAction, &QAction::triggered, this, [this]() {
+        auto list = this->getScene()->items();
+        foreach(auto item, list) {
+            if(item->type() == LineType) {
+                item->setSelected(true);
+            }
+        }
+        qDebug() << "Check treiggerd!";
+    });
 
     auto shearAction = new QAction(tr("&Сдвиг"), this);
 
@@ -173,6 +164,9 @@ void MainWindow::createMenu() {
     editMenu->addAction(removeAction);
     editMenu->addAction(removeAllAction);
     editMenu->addAction(bindAction);
+    editMenu->addAction(undoAction);
+    editMenu->addAction(redoAction);
+    editMenu->addAction(checkAction);
 
     geometryMenu->addAction(pointAction);
     geometryMenu->addAction(lineAction);
@@ -196,6 +190,9 @@ void MainWindow::createToolBar() {
     toolBar->addAction(rectAction);
     toolBar->addAction(circleAction);
     toolBar->addAction(textAction);
+    toolBar->addSeparator();
+    toolBar->addAction(undoAction);
+    toolBar->addAction(redoAction);
     toolBar->addSeparator();
     toolBar->addAction(removeAction);
     toolBar->addAction(removeAllAction);
@@ -236,8 +233,13 @@ void MainWindow::createDockInputWgt() {
 
     connect(inWgt, &InputWgt::okSignal, this, [this]() {
         getScene()->setTypeMode(Mode::Input);
-        auto data = this->inWgt->getData();
-        getScene()->addShape(data);
+        if(wgtInput) {
+            auto data = this->inWgt->getData();
+            getScene()->addShape(data);
+        }
+
+        mSceneComd->addMomento(getScene()->createMomento());
+        mNumAction++;
         qDebug() << "Lambda Ok!";
     });
 
@@ -317,7 +319,13 @@ void MainWindow::slotOpenFile() {
 void MainWindow::slotNewFile() {
     auto view = new QGraphicsView(ui->mdiArea);
     auto scene = new Scene;
+    mSceneComd = new SceneCommand(scene);
     connect(scene, SIGNAL(editSignal(QGraphicsItem*)), this, SLOT(slotEditItem(QGraphicsItem*)));
+    connect(scene, &QGraphicsScene::changed, this, [this]() {
+        auto list = this->getScene()->items();
+        qDebug() << "Scene is changed, " << list.count() << " " << list.last()->type();
+    });
+    connect(scene, &Scene::endInputSignal, this, [this]() { this->wgtInput = false; });
     mScenes.append(scene);
     view->setScene(scene);
     view->setAlignment(/*Qt::AlignTop | */Qt::AlignCenter);
@@ -607,9 +615,9 @@ void MainWindow::slotCreate() {
         //m_scene->addShape(data);
         scene->setTypeMode(Mode::Input);
         scene->addShape(data);
-        mMomentoList.append(scene->createMomento());
-
-
+        //mMomentoList.append(scene->createMomento());
+        mSceneComd->addMomento(scene->createMomento());
+       // mNumAction++;
     } else if(m_mode == Mode::Edit) {
         scene->removeItem(currentItem);
         auto data = inWgt->getData();
@@ -652,9 +660,7 @@ void MainWindow::slotSelect(QGraphicsItem *item) {
         case RectType: qgraphicsitem_cast<Rect*>(currentItem)->setSelect();
             break;
         case MoveType: auto m = new MoveItem;
-            m->setPos(randomBetween(30, 470),
-                         randomBetween(30, 470));
-            getScene()->addItem(m);
+
 
     }
 
@@ -695,22 +701,13 @@ void MainWindow::slotCheck() {
 
 void MainWindow::slotCheckRect() {
     RectItem *item = new RectItem();
-    item->setPos(randomBetween(0, 128),
-                 randomBetween(0, 64));
+
     getScene()->addItem(item);
     changeType(ItemType::Rect);
 }
 
 void MainWindow::slotCheckCircle() {
-   // CircleItem *item = new CircleItem();
-   auto item = getScene()->addEllipse(QRect(randomBetween(0, 128),
-                             randomBetween(0, 64), 30, 30));
-   // item->setPos(randomBetween(0, 128),
-     //             randomBetween(0, 64));
-    //m_scene->addItem(item);
-   item->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
-   item->setSelected(true);
-    changeType(ItemType::Circle);
+
 }
 
 void MainWindow::slotDeleteSelected() {
@@ -753,7 +750,16 @@ void MainWindow::slotSceneEndInput() {
 }
 
 void MainWindow::undo() {
-    getScene()->createMomento(mMomentoList.back());
+    mSceneComd->undo();
+    /*auto m = mMomentoList.at(mNumAction - 1);
+    getScene()->reinstateMomento(m);
+    mNumAction--;*/
+}
+
+void MainWindow::redo() {
+    auto m = mMomentoList.at(mNumAction + 1);
+    getScene()->reinstateMomento(m);
+    mNumAction++;
 }
 
 //D как A на 5 ладу, C#m как Em на 4 ладу, Dsus2 как A на 5 ладу

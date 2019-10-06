@@ -14,22 +14,48 @@
 #include "scene.h"
 #include "workwidget.h"
 
-class DrawFactory : public QObject {
-    Q_OBJECT
+class SceneCommand {
 public:
-    DrawFactory(QObject *parent);
-    ~DrawFactory();
+    SceneCommand(Scene *receiver)
+        : mReceiver(receiver)/*, mAction(action)*/ {
+        mNumCommands = 0;
+    }
 
-   // void draw(const ItemType type, QGraphicsScene *scene);
-    void draw(const ItemType type, QGraphicsScene *scene, QGraphicsItem *item);
+    void undo() {
+        if (mNumCommands == 0) {
+            return;
+        }
 
+        auto m = mMomentoList.at(mNumCommands - 1);
+        mReceiver->reinstateMomento(m);
+        mNumCommands--;
+    }
 
+    void redo() {
+        /*if (mNumCommands > mHighWater) {
+            return ;
+        }
+
+        mCommandList.at(mNumCommands)->mReceiver->
+
+        (mCommandList[mNumCommands]->mReceiver->*(mCommandList[mNumCommands]
+                  ->mAction))();
+                mNumCommands++;*/
+    }
+
+    void addMomento(SceneMomento *momento) {
+        mMomentoList.append(momento);
+        mNumCommands++;
+    }
 private:
-    bool state;
-
-    void workWithLine(QGraphicsScene *scene, QGraphicsItem *item);
+    Scene *mReceiver;
+    QAction *mAction;
+    QList<SceneCommand*> mCommandList;
+    QList<SceneMomento*> mMomentoList;
+    int mNumCommands;
+    int mHighWater = 3;
+    QList<int> l;
 };
-
 
 namespace Ui {
 class MainWindow;
@@ -99,6 +125,9 @@ private:
     QAction *removeAction;
     QAction *removeAllAction;
     QAction *bindAction;
+    QAction *redoAction;
+    QAction *undoAction;
+    QAction *checkAction;
 
     QDockWidget *workWgtDock;
 
@@ -106,6 +135,10 @@ private:
 
     QList<QAction*> mActionList;
     QList<SceneMomento*> mMomentoList;
+    int mNumAction;
+
+    SceneCommand* mSceneComd;
+    bool wgtInput;
 
 private slots:
     void slotTextBut();
