@@ -130,14 +130,16 @@ public:
     SceneMomento* createMomento() {
         return new SceneMomento(mCurrentState);
     }
-    void reinstateMomento(SceneMomento *momento) {
+    void reinstateMomentoUndo(SceneMomento *momento) {
         auto list = items();
         this->removeItem(momento->mState);
-        mCurrentState = this->items().last();      //auto items = this->items();
-        /*auto i = items.indexOf(mCurrentState);
-        items.removeAt(i);
-        //mCurrentState = items.last();
-        mCurrentState = momento->mState;*/
+        mCurrentState = this->items().last();
+        update();
+    }
+    void reinstateMomentoRedo(SceneMomento *momento) {
+        mCurrentState = momento->mState;
+        this->addItem(mCurrentState);
+        auto list = items();
         update();
     }
 protected:

@@ -19,6 +19,7 @@ public:
     SceneCommand(Scene *receiver)
         : mReceiver(receiver)/*, mAction(action)*/ {
         mNumCommands = 0;
+        mCurrentMomento = 0;
     }
 
     void undo() {
@@ -26,25 +27,29 @@ public:
             return;
         }
 
-        auto m = mMomentoList.at(mNumCommands - 1);
-        mReceiver->reinstateMomento(m);
+        auto m = mMomentoList.at(0);
+        mMomentoList.removeFirst();
+        mRemoveMomentoList.prepend(m);
+        mReceiver->reinstateMomentoUndo(m);
         mNumCommands--;
     }
 
     void redo() {
-        /*if (mNumCommands > mHighWater) {
+        if (mNumCommands > mHighWater || mRemoveMomentoList.isEmpty()) {
             return ;
         }
 
-        mCommandList.at(mNumCommands)->mReceiver->
-
-        (mCommandList[mNumCommands]->mReceiver->*(mCommandList[mNumCommands]
-                  ->mAction))();
-                mNumCommands++;*/
+        auto m = mRemoveMomentoList.at(0);
+        mRemoveMomentoList.removeFirst();
+        mMomentoList.prepend(m);
+        mReceiver->reinstateMomentoRedo(m);
+        mNumCommands++;
     }
 
     void addMomento(SceneMomento *momento) {
-        mMomentoList.append(momento);
+        //mMomentoList.append(momento);
+        //mCurrentMomento = mMomentoList.count();
+        mMomentoList.prepend(momento);
         mNumCommands++;
     }
 private:
@@ -52,8 +57,10 @@ private:
     QAction *mAction;
     QList<SceneCommand*> mCommandList;
     QList<SceneMomento*> mMomentoList;
+    QList<SceneMomento*> mRemoveMomentoList;
     int mNumCommands;
-    int mHighWater = 3;
+    int mCurrentMomento;
+    int mHighWater = 5;
     QList<int> l;
 };
 

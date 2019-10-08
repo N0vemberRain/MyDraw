@@ -137,7 +137,9 @@ void MainWindow::createMenu() {
     connect(removeAction, SIGNAL(triggered()), this, SLOT(slotRemove()));
     connect(removeAllAction, SIGNAL(triggered()), this, SLOT(slotRemoveAll()));
     connect(bindAction, SIGNAL(triggered(bool)), this, SLOT(slotBind(bool)));
-    connect(redoAction, SIGNAL(triggered()), this, SLOT(redo()));
+    connect(redoAction, &QAction::triggered, this, [this]() {
+        mSceneComd->redo();
+    });
     connect(undoAction, &QAction::triggered, this, [this]() {
         mSceneComd->undo();
     });
@@ -757,9 +759,7 @@ void MainWindow::undo() {
 }
 
 void MainWindow::redo() {
-    auto m = mMomentoList.at(mNumAction + 1);
-    getScene()->reinstateMomento(m);
-    mNumAction++;
+
 }
 
 //D как A на 5 ладу, C#m как Em на 4 ладу, Dsus2 как A на 5 ладу
