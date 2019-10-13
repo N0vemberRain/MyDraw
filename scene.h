@@ -130,7 +130,7 @@ public:
 
     Momento* createMomento(MomentoType type) {
         switch (type) {
-        case MomentoType::MoveMomento: return new MoveMomento
+        case MomentoType::MoveMomento: return new MoveMomento(mCurrentState);
         }
         return new SceneMomento(mCurrentState);
     }
