@@ -169,19 +169,6 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent *pe) {
     //drawPoint();
     switch (mode) {
     case Mode::Normal: inNormalMode(pe);
-        /*foreach(auto item, this->items()) {
-            if(item->type() == GridType) {
-                continue;
-            }*
-
-            if(item->boundingRect().contains(pe->scenePos())) {
-                mode = Mode::Select;
-                inSelectMode(pe);
-            }
-        }
-*/
-
-
         break;
     case Mode::Input: inInputMode(pe);
         break;
@@ -442,10 +429,9 @@ void Scene::drawCircle() {
     }
 
     if(pointsVec.count() == 2) {
-        auto p1 = findDot(pointsVec.at(0));
-        auto p2 = findDot(pointsVec.at(1));
-        CircleDot *c = new CircleDot(p1.first, p1.second, p2.first - p1.first);
-        map.addLine(c->getPoints());
+        CircleItem *c = new CircleItem(pointsVec.at(0), pointsVec.at(1));
+        this->addItem(c);
+        mCurrentState = c;
         pointsVec.clear();
         waitingPoint = false;
         emit endInputSignal();
@@ -462,6 +448,7 @@ void Scene::drawCircle(const double radius) {
     //Circle *r = new Circle(pointsVec.at(0), radius);
     CircleItem *c = new CircleItem(pointsVec.at(0), radius);
     this->addItem(c);
+    mCurrentState = c;
     pointsVec.clear();
     waitingPoint = false;
     emit endInputSignal();
@@ -491,6 +478,7 @@ void Scene::drawRect() {
         RectItem *r = new RectItem(pointsVec.at(0), pointsVec.at(1));
         //r->setFlag(QGraphicsItem::ItemIsMovable);
         this->addItem(r);
+        mCurrentState = r;
         pointsVec.clear();
         waitingPoint = false;
         emit endInputSignal();
@@ -510,6 +498,7 @@ void Scene::drawRect(const double width, const double height) {
     //Rect *r = new Rect(pointsVec.at(0), QPointF(bottomRightX, bottomRightY));
     RectItem *r = new RectItem(pointsVec.at(0), QPointF(bottomRightX, bottomRightY));
     this->addItem(r);
+    mCurrentState = r;
     pointsVec.clear();
     waitingPoint = false;
     emit endInputSignal();
@@ -542,14 +531,6 @@ void Scene::addShape(const QStringList &list) {
     if(mode == Mode::Normal) {
         return;
     }
-
-   /* for(int i = 0; i < list.count(); i++) {
-        if(list.at(i) == "P") {
-            int x = i + 1;
-            int y = i + 2;
-            pointsVec.append(QPointF(list.at(x).toDouble(), list.at(y).toDouble()));
-        }
-    }*/
 
     waitingPoint = true;
     pointsVec.clear();

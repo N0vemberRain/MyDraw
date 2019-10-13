@@ -36,6 +36,7 @@ SOURCES += \
     rect.cpp \
     circle.cpp \
     scenemomento.cpp \
+    scenestate.cpp \
     workwidget.cpp \
     selectarea.cpp \
     text.cpp \
@@ -46,6 +47,7 @@ HEADERS += \
         mainwindow.h \
     scene.h \
     scenemomento.h \
+    scenestate.h \
     types.h \
     point.h \
     line.h \

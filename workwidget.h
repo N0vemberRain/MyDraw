@@ -17,15 +17,16 @@ public:
     explicit InputWgt(QWidget *wgt = nullptr) : QWidget(wgt) {
         mOkButton = new QPushButton("&Создать");
         connect(mOkButton, SIGNAL(clicked()), this, SLOT(slotOk()));
+        mOkButton->setStyleSheet("background-color: white;\ncolor: black;\nfont: 14px;");
 
         mCancelButton = new QPushButton("&Стоп");
         connect(mCancelButton, SIGNAL(clicked()), this, SLOT(slotCancel()));
+        mCancelButton->setStyleSheet("background-color: white;\ncolor: black;\nfont: 14px;");
 
         mLayout = new QGridLayout;
         mLayout->addWidget(mOkButton, 0, 0);
         mLayout->addWidget(mCancelButton, 0, 1);
 
-        setStyleSheet("background: rgb(50, 50, 50); color: white;");
         setMaximumSize(200, 200);
         setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Maximum);
 
@@ -85,7 +86,7 @@ public:
 
     virtual QStringList getData() const = 0;
     virtual void setData(const QStringList &data) = 0;
-    virtual void addStyleSheet() = 0;
+    virtual void addStyleSheet();
 protected:
     QString getPosX() const { return mPosXLine->text(); }
     QString getPosY() const { return mPosYLine->text(); }
@@ -148,39 +149,7 @@ private:
 class RectInputWgt : public FormInputWgt {
     Q_OBJECT
 public:
-    explicit RectInputWgt() : FormInputWgt() {
-        mEndLabel = new QLabel(tr("&Точка2"));
-        createLabel(mEndLabel);
-        mEndXLine = new QLineEdit();
-        mEndYLine = new QLineEdit();
-        mEndLabel->setBuddy(mEndXLine);
-        mEndLabel->setBuddy(mEndYLine);
-
-        mWidthLabel = new QLabel(tr("&Ширина"));
-        createLabel(mWidthLabel);
-        mWidthLine = new QLineEdit();
-        mWidthLabel->setBuddy(mWidthLine);
-
-        mHeightLabel = new QLabel(tr("&Высота"));
-        createLabel(mHeightLabel);
-        mHeightLine = new QLineEdit();
-        mHeightLabel->setBuddy(mHeightLine);
-
-        getLayout()->addWidget(mEndLabel, 3, 0, 1, 2);
-        getLayout()->addWidget(mEndXLine, 4, 0);
-        getLayout()->addWidget(mEndYLine, 4, 1);
-        getLayout()->addWidget(mWidthLabel, 5, 0);
-        getLayout()->addWidget(mWidthLine, 5, 1);
-        getLayout()->addWidget(mHeightLabel, 6, 0);
-        getLayout()->addWidget(mHeightLine, 6, 1);
-
-        setLayout(getLayout());
-
-        for(int i = 0; i < getLayout()->rowCount(); i++) {
-            getLayout()->setRowStretch(i, 1);
-        }
-    }
-
+    explicit RectInputWgt();
     virtual ~RectInputWgt() {}
 
     virtual QStringList getData() const;

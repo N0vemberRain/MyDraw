@@ -56,8 +56,8 @@ private:
     Scene *mReceiver;
     QAction *mAction;
     QList<SceneCommand*> mCommandList;
-    QList<SceneMomento*> mMomentoList;
-    QList<SceneMomento*> mRemoveMomentoList;
+    QList<Momento*> mMomentoList;
+    QList<Momento*> mRemoveMomentoList;
     int mNumCommands;
     int mCurrentMomento;
     int mHighWater = 5;

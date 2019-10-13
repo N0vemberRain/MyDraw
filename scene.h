@@ -16,6 +16,7 @@
 #include "text.h"
 #include "pixmap.h"
 #include "scenemomento.h"
+#include "scenestate.h"
 
 
 class Grid : public QObject, public QGraphicsRectItem {
@@ -127,20 +128,49 @@ public:
         tmpText = text;
     }
 
-    SceneMomento* createMomento() {
+    Momento* createMomento(MomentoType type) {
+        switch (type) {
+        case MomentoType::MoveMomento: return new MoveMomento
+        }
         return new SceneMomento(mCurrentState);
     }
-    void reinstateMomentoUndo(SceneMomento *momento) {
+
+    void reinstateAddingItemMomentoUndo(AddingMomento *momento) {
         auto list = items();
         this->removeItem(momento->mState);
         mCurrentState = this->items().last();
         update();
     }
-    void reinstateMomentoRedo(SceneMomento *momento) {
+
+    void reinstateAddingItemMomentoRedo(AddingMomento *momento) {
         mCurrentState = momento->mState;
         this->addItem(mCurrentState);
         auto list = items();
         update();
+    }
+
+    void reinstateMoveMomentoUndo(MoveMomento *momento) {
+
+    }
+
+    void reinstateMoveMomentoRedo(MoveMomento *momento) {
+
+    }
+
+    void reinstateMomentoUndo(Momento *momento) {
+        switch (momento->type()) {
+        case MomentoType::MoveMomento: reinstateMomentoUndo(static_cast<MoveMomento*>(momento));
+            break;
+        case MomentoType::AddingItemMomento: reinstateAddingItemMomentoUndo(static_cast<AddingMomento*>(momento));
+            break;
+        }
+    }
+    void reinstateMomentoRedo(Momento *momento) {
+
+    }
+
+    void changeState(SceneState *state) {
+
     }
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *pe);
@@ -212,7 +242,7 @@ private:
     QString tmpText;
 
 
-    QGraphicsItem *mCurrentState;
+    SceneState *mCurrentState;
 
 
 signals:

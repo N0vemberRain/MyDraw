@@ -154,6 +154,7 @@ private:
     }
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
         painter->setPen(*m_pen);
+        m_pen->setColor(Qt::white);
     //    painter->setBrush(Qt::green);
         //painter->drawPolygon(mapToScene(m_rect));
         painter->drawRect(mapRectFromScene(m_rect));

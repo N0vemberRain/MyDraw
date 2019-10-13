@@ -121,6 +121,7 @@ private:
     }
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
         painter->setPen(*mPen);
+        mPen->setColor(Qt::white);
         //painter->setBrush(Qt::green);
         painter->drawEllipse(mapRectFromScene(makeCircle()));
         Q_UNUSED(option);

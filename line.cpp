@@ -31,6 +31,7 @@ void Line::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
         mPen->setColor(Qt::red);
     }
     painter->setPen(*mPen);
+    mPen->setColor(Qt::white);
     QPainterPath path(mLine.p1());
     path.lineTo(mLine.p2());
     painter->drawPath(mapFromScene(path));

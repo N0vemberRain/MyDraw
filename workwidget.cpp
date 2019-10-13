@@ -11,6 +11,13 @@ void FormInputWgt::slotCancel() {
     emit cancelSignal();
 }
 
+void FormInputWgt::addStyleSheet() {
+    setStyleSheet("color: rgb(50, 50, 50); color: red; flat: px10; ");
+    mPosLabel->setStyleSheet("color: green; font: 14px;");
+    mPosXLine->setStyleSheet("background-color: white; color: black; font: 14px;");
+    mPosYLine->setStyleSheet("background-color: white; color: black; font: 14px;");
+}
+
 void LineInputWgt::slotOk() {
     emit okSignal(/*prepareData()*/);
 }
@@ -47,7 +54,46 @@ void LineInputWgt::setData(const QStringList &data) {
 }
 
 void LineInputWgt::addStyleSheet() {
+    FormInputWgt::addStyleSheet();
+    mEndLabel->setStyleSheet("color: white; font: 14px;");
+    mEndXLine->setStyleSheet("background-color: white; color: black; font: 14px;");
+    mEndYLine->setStyleSheet("background-color: white; color: black; font: 14px;");
+}
 
+RectInputWgt::RectInputWgt()
+    : FormInputWgt () {
+    mEndLabel = new QLabel(tr("&Точка2"));
+    createLabel(mEndLabel);
+    mEndXLine = new QLineEdit();
+    mEndYLine = new QLineEdit();
+    mEndLabel->setBuddy(mEndXLine);
+    mEndLabel->setBuddy(mEndYLine);
+
+    mWidthLabel = new QLabel(tr("&Ширина"));
+    createLabel(mWidthLabel);
+    mWidthLine = new QLineEdit();
+    mWidthLabel->setBuddy(mWidthLine);
+
+    mHeightLabel = new QLabel(tr("&Высота"));
+    createLabel(mHeightLabel);
+    mHeightLine = new QLineEdit();
+    mHeightLabel->setBuddy(mHeightLine);
+
+    getLayout()->addWidget(mEndLabel, 3, 0, 1, 2);
+    getLayout()->addWidget(mEndXLine, 4, 0);
+    getLayout()->addWidget(mEndYLine, 4, 1);
+    getLayout()->addWidget(mWidthLabel, 5, 0);
+    getLayout()->addWidget(mWidthLine, 5, 1);
+    getLayout()->addWidget(mHeightLabel, 6, 0);
+    getLayout()->addWidget(mHeightLine, 6, 1);
+
+    setLayout(getLayout());
+
+    for(int i = 0; i < getLayout()->rowCount(); i++) {
+        getLayout()->setRowStretch(i, 1);
+    }
+
+    addStyleSheet();
 }
 
 void RectInputWgt::slotOk() {
@@ -95,7 +141,17 @@ void RectInputWgt::setData(const QStringList &data) {
 }
 
 void RectInputWgt::addStyleSheet() {
+    FormInputWgt::addStyleSheet();
+    mEndLabel->setStyleSheet("color: white; font: 14px; height: 20px;");
+    mEndXLine->setStyleSheet("background-color: white; color: black; font: 14px;");
+    mEndYLine->setStyleSheet("background-color: white; color: black; font: 14px;");
+    mWidthLabel->setStyleSheet("color: white; font: 14px; height: 100px;");
+    mHeightLabel->setStyleSheet("color: white; font: 14px;");
+    mWidthLine->setStyleSheet("background-color: white; color: black; font: 14px;");
+    mHeightLine->setStyleSheet("background-color: white; color: black; font: 14px;");
 
+    setMaximumSize(200, 400);
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Maximum);
 }
 
 CircleInputWgt::CircleInputWgt()
@@ -123,6 +179,8 @@ CircleInputWgt::CircleInputWgt()
     for(int i = 0; i < getLayout()->rowCount(); i++) {
         getLayout()->setRowStretch(i, 1);
     }
+
+    addStyleSheet();
 }
 
 void CircleInputWgt::slotOk() {
@@ -166,7 +224,12 @@ void CircleInputWgt::setData(const QStringList &data) {
 }
 
 void CircleInputWgt::addStyleSheet() {
-
+    FormInputWgt::addStyleSheet();
+    mRPLabel->setStyleSheet("color: white; font: 14px;");
+    mRPXLine->setStyleSheet("background-color: white; color: black; font: 14px;");
+    mRPYLine->setStyleSheet("background-color: white; color: black; font: 14px;");
+    mRLabel->setStyleSheet("color: white; font: 14px;");
+    mRLine->setStyleSheet("color: white; font: 14px;");
 }
 
 PointInputWgt::PointInputWgt()

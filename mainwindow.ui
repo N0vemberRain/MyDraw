@@ -13,6 +13,13 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">background: rgb(50,50,50);
+color: white;
+font: 14px;
+
+</string>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QMdiArea" name="mdiArea">
     <property name="geometry">
@@ -24,7 +31,7 @@
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background: rgb(30, 30, 30);
+     <string notr="true">background: rgb(15, 15, 15);
 color: white;</string>
     </property>
     <property name="viewMode">
@@ -50,7 +57,7 @@ color: white;</string>
      <x>0</x>
      <y>0</y>
      <width>1440</width>
-     <height>20</height>
+     <height>24</height>
     </rect>
    </property>
    <property name="styleSheet">

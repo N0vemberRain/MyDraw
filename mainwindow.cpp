@@ -231,7 +231,7 @@ void MainWindow::createDockInputWgt() {
     dockInputWgt = new QDockWidget("Dock", this);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, dockInputWgt);
     dockInputWgt->setWidget(inWgt);
-    dockInputWgt->setStyleSheet("background: grb(25, 25, 25);");
+    dockInputWgt->setStyleSheet("background: red;");
 
     connect(inWgt, &InputWgt::okSignal, this, [this]() {
         getScene()->setTypeMode(Mode::Input);
@@ -335,7 +335,7 @@ void MainWindow::slotNewFile() {
     view->setWindowTitle("Subwindow");
     view->show();
     view->scale(3, 3);
-    view->setStyleSheet("background: rgb(50, 50, 50);");
+    view->setStyleSheet("background: rgb(30, 30, 30);");
 }
 
 void MainWindow::slotRemove() {
@@ -493,9 +493,6 @@ void MainWindow::slotClearBut() {
 
 void MainWindow::startInput() {
     createInputWgt();
-
-    //connect(comboBox, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged),
-    //[=](const QString &text){ });
 
     QStringList data;
     if(m_mode == Mode::Edit) {
