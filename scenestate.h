@@ -15,6 +15,9 @@ public:
     virtual QGraphicsItem* getItem() const = 0;
     virtual qreal getX() const = 0;
     virtual qreal getY() const = 0;
+    virtual void setItem(QGraphicsItem*) = 0;
+    virtual void setX(const qreal dx) = 0;
+    virtual void setY(const qreal dy) = 0;
 protected:
     //void changeState(Scene *scene, SceneState *state);
 };
@@ -25,6 +28,11 @@ public:
     virtual ~AddingState();
 
     virtual QGraphicsItem* getItem() const { return mItem; }
+    virtual qreal getX() const { return 0.0; }
+    virtual qreal getY() const { return 0.0; }
+    virtual void setItem(QGraphicsItem* item) { mItem = item; }
+    virtual void setX(const qreal dx) { Q_UNUSED(dx); }
+    virtual void setY(const qreal dy) { Q_UNUSED(dy); }
 private:
     QGraphicsItem *mItem;
 };
@@ -37,6 +45,9 @@ public:
     virtual QGraphicsItem* getItem() const { return mItem; }
     virtual qreal getX() const { return mHorizontalShear; }
     virtual qreal getY() const { return  mVerticalShear; }
+    virtual void setItem(QGraphicsItem* item) { mItem = item; }
+    virtual void setX(const qreal dx) { mHorizontalShear = dx; }
+    virtual void setY(const qreal dy) { mVerticalShear = dy; }
 private:
     QGraphicsItem *mItem;
     qreal mHorizontalShear;

@@ -10,11 +10,13 @@
 
 class Scene;
 class SceneState;
+class AddingState;
+class MoveState;
 
 class Momento {
 public:
-    Momento() {}
-    ~Momento() {}
+    //Momento() {}
+    virtual ~Momento() = 0;
     MomentoType type() const { return mType; }
 
 protected:
@@ -28,10 +30,8 @@ private:
 class AddingMomento : public Momento
 {
 public:
-    AddingMomento(/*QList<QGraphicsItem*>*/ QGraphicsItem* state)
-        : Momento(), mState(state) {
-        Momento::setType(MomentoType::AddingItemMomento);
-    }
+    AddingMomento(QGraphicsItem*);
+    AddingMomento(AddingState*);
     virtual ~AddingMomento();
 
     MomentoType type() const { return Momento::type(); }
@@ -39,29 +39,34 @@ private:
     friend class Scene;
 
     //QList<QGraphicsItem*> mState;
-    QGraphicsItem *mState;
+    QGraphicsItem *mItem;
+    AddingState *mState;
 };
 
 class MoveMomento : public Momento {
 public:
-    MoveMomento(QGraphicsItem *target, const qreal dx, const qreal dy)
-        : Momento(), mTarget(target), x(dx), y(dy) {
-        Momento::setType(MomentoType::MoveMomento);
-    }
-    ~MoveMomento() {
-        delete mTarget;
-    }
+    MoveMomento(QGraphicsItem *item, const qreal dx, const qreal dy);
+    MoveMomento(MoveState*);
+    ~MoveMomento();
 
     MomentoType type() const { return Momento::type(); }
 
 private:
     friend class Scene;
 
-    QGraphicsItem *mTarget;
+    MoveState *mState;
+    QGraphicsItem *mItem;
     qreal x;
     qreal y;
 };
 
+class MomentoFactory {
+public:
+    explicit MomentoFactory() {}
+    ~MomentoFactory() {}
+
+    Momento* createMomento
+};
 
 
 #endif // SCENEMOMENTO_H
