@@ -59,4 +59,22 @@ public:
     static SceneState* instance();
 };*/
 
+class StateFactory {
+    public:
+    SceneState* createState(const MomentoType type, QGraphicsItem *item) {
+        return new AddingState(item);
+    }
+    
+    SceneState* createState(const MomentoType type, QGraphicsItem *item, const qreal dx, const qreal dy)
+        switch(type) {
+        case MomentoType::MoveMomento: return new MoveState(item, dx, dy);
+            break;
+        case MomentoType::AddingMomento: return new AddingState(item);
+            break;
+        case MomentoType::ResizeMomento: return new ResizeState(item, dx, dy);
+            break;
+        }
+    }
+};
+
 #endif // SCENESTATE_H
