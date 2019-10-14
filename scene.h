@@ -131,8 +131,12 @@ public:
     Momento* createMomento(MomentoType type) {
         switch (type) {
         case MomentoType::MoveMomento: return new MoveMomento(mCurrentState);
+            break;
+        case MomentoType::AddingMomento: return new AddingMomento(mCurrentState);
+            break;
+        case MomentoType::ResizeMomento: return new ResizeMomento(mCurrentState);
+            break;        
         }
-        return new SceneMomento(mCurrentState);
     }
 
     void reinstateAddingItemMomentoUndo(AddingMomento *momento) {
@@ -172,6 +176,21 @@ public:
     void changeState(SceneState *state) {
 
     }
+    
+    void setState(MomentoType type, QGraphicsItem *item) {
+        mCurrentState = mStateFactory.createState()
+    }
+        
+    void setState(MomentoType type, QGraphicsItem *item, const qreal dx, const qreal dy) {
+        switch(type) {
+            case MomentoType::MoveMomento: mCurrentState = mStateFactory.createState(type, item, dx, dy);
+                break;
+            case MomentoType::AddingMomento: mCurrentState = mStateFactory.createState(type, item);
+                break;
+            case MomentoType::ResizeMomento: mCurrentState = mStateFactory.createState(type, item, dx, dy);
+                break;
+        }
+    }    
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *pe);
     void wheelEvent(QGraphicsSceneWheelEvent *pe);
