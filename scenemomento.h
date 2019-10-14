@@ -6,6 +6,7 @@
 #include <QAction>
 
 #include "types.h"
+#include "scenestate.h"
 //#include "scene.h"
 
 class Scene;
@@ -15,7 +16,7 @@ class MoveState;
 
 class Momento {
 public:
-    //Momento() {}
+    //Momento(SceneState *state);
     virtual ~Momento() = 0;
     MomentoType type() const { return mType; }
 
@@ -30,8 +31,8 @@ private:
 class AddingMomento : public Momento
 {
 public:
-    AddingMomento(QGraphicsItem*);
-    AddingMomento(AddingState*);
+    explicit AddingMomento(QGraphicsItem*);
+    explicit AddingMomento(AddingState*);
     virtual ~AddingMomento();
 
     MomentoType type() const { return Momento::type(); }
@@ -45,8 +46,8 @@ private:
 
 class MoveMomento : public Momento {
 public:
-    MoveMomento(QGraphicsItem *item, const qreal dx, const qreal dy);
-    MoveMomento(MoveState*);
+    explicit MoveMomento(QGraphicsItem *item, const qreal dx, const qreal dy);
+    explicit MoveMomento(MoveState*);
     ~MoveMomento();
 
     MomentoType type() const { return Momento::type(); }
@@ -62,10 +63,37 @@ private:
 
 class MomentoFactory {
 public:
-    explicit MomentoFactory() {}
-    ~MomentoFactory() {}
+  //  explicit MomentoFactory() {}
+    //~MomentoFactory() {}
 
-    Momento* createMomento
+    Momento* createMomento(const MomentoType type, SceneState *state) {
+       /* Momento *m;
+        switch(type) {
+        case MomentoType::MoveMomento: m = new MoveMomento(state);
+            break;
+        case MomentoType::AddingItemMomento: state = new AddingState(state);
+            break;
+        //case MomentoType::ResizeMomento: return new ResizeState(item, dx, dy);
+          //  break;
+        default: state = nullptr;
+        }
+        return state;*/
+    }
+
+    Momento* createMomento(const MomentoType type, QGraphicsItem *item,
+                           const qreal dx = 0, const qreal dy = 0) {
+        Momento *m;
+        switch(type) {
+        case MomentoType::MoveMomento: m = new MoveMomento(item, dx, dy);
+            break;
+        case MomentoType::AddingItemMomento: m = new AddingMomento(item);
+            break;
+        //case MomentoType::ResizeMomento: return new ResizeState(item, dx, dy);
+          //  break;
+        default: m = nullptr;
+        }
+        return m;
+    }
 };
 
 

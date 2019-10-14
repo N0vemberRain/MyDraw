@@ -375,7 +375,7 @@ void Scene::drawLine() {
             //auto points = line->getLine();
             //map.addLine(points);
             addItem(l);
-            mCurrentState = l;
+            mCurrentState = new AddingState(l);
           //  addRect(line->getRect());
             pointsVec.clear();
             waitingPoint = false;
@@ -431,7 +431,7 @@ void Scene::drawCircle() {
     if(pointsVec.count() == 2) {
         CircleItem *c = new CircleItem(pointsVec.at(0), pointsVec.at(1));
         this->addItem(c);
-        mCurrentState = c;
+        mCurrentState = new AddingState(c);
         pointsVec.clear();
         waitingPoint = false;
         emit endInputSignal();
@@ -448,7 +448,7 @@ void Scene::drawCircle(const double radius) {
     //Circle *r = new Circle(pointsVec.at(0), radius);
     CircleItem *c = new CircleItem(pointsVec.at(0), radius);
     this->addItem(c);
-    mCurrentState = c;
+    mCurrentState = new AddingState(c);
     pointsVec.clear();
     waitingPoint = false;
     emit endInputSignal();
@@ -478,7 +478,7 @@ void Scene::drawRect() {
         RectItem *r = new RectItem(pointsVec.at(0), pointsVec.at(1));
         //r->setFlag(QGraphicsItem::ItemIsMovable);
         this->addItem(r);
-        mCurrentState = r;
+        mCurrentState = new AddingState(r);
         pointsVec.clear();
         waitingPoint = false;
         emit endInputSignal();
@@ -498,7 +498,7 @@ void Scene::drawRect(const double width, const double height) {
     //Rect *r = new Rect(pointsVec.at(0), QPointF(bottomRightX, bottomRightY));
     RectItem *r = new RectItem(pointsVec.at(0), QPointF(bottomRightX, bottomRightY));
     this->addItem(r);
-    mCurrentState = r;
+    mCurrentState = new AddingState(r);
     pointsVec.clear();
     waitingPoint = false;
     emit endInputSignal();

@@ -17,9 +17,6 @@
 
 #include "types.h"
 
-
-
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -120,6 +117,7 @@ void MainWindow::createMenu() {
     redoAction = new QAction(tr("&Вперед"));
     undoAction = new QAction(tr("&Назад"));
     checkAction = new QAction(tr("Check"));
+    moveAction = new QAction(tr("&Сдвиг"));
 
     connect(newFileAction, SIGNAL(triggered()), this, SLOT(slotNewFile()));
     connect(openFileAction, SIGNAL(triggered()), this, SLOT(slotOpenFile()));
@@ -150,10 +148,22 @@ void MainWindow::createMenu() {
                 item->setSelected(true);
             }
         }
-        qDebug() << "Check treiggerd!";
     });
 
-    auto shearAction = new QAction(tr("&Сдвиг"), this);
+    connect(moveAction, &QAction::triggered, this, [this]() {
+        if(m_mode != Mode::Normal || getScene()->items().count() == 0) {
+            return;
+        }
+
+        if(getScene()->selectedItems().isEmpty()) {
+            return;
+        }
+        auto item = getScene()->selectedItems().at(0);
+        this->getScene()->shearItem(item, )
+        changeMode(Mode::Normal);
+        getScene()->update();
+    });
+
 
     fileMenu->addAction(newFileAction);
     fileMenu->addAction(openFileAction);
@@ -177,7 +187,7 @@ void MainWindow::createMenu() {
     geometryMenu->addAction(circleAction);
     geometryMenu->addAction(textAction);
 
-    moveMenu->addAction(shearAction);
+    moveMenu->addAction(moveAction);
 }
 
 void MainWindow::createToolBar() {
@@ -241,7 +251,6 @@ void MainWindow::createDockInputWgt() {
         }
 
         mSceneComd->addMomento(getScene()->createMomento());
-        mNumAction++;
         qDebug() << "Lambda Ok!";
     });
 
