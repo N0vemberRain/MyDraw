@@ -262,7 +262,7 @@ private:
 
 
     SceneState *mCurrentState;
-
+    StateFactory *mStateFactory;
 
 signals:
     QGraphicsItem* editSignal(QGraphicsItem *item);
