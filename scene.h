@@ -154,11 +154,37 @@ public:
     }
 
     void reinstateMoveMomentoUndo(MoveMomento *momento) {
+        auto item = momento->mItem;
+        auto dx = momento->x;
+        auto dy = momento->y;
+        switch (item->type()) {
+        case LineType: qgraphicsitem_cast<Line*>(item)->setShear(-dx, -dy);
+            break;
+        case RectType: qgraphicsitem_cast<RectItem*>(item)->setShear(-dx, -dy);
+            break;
+        case CircleType: qgraphicsitem_cast<CircleItem*>(item)->setShear(-dx, -dy);
+            break;
+        }
 
+        mCurrentState->setItem(item);
+        mCurrentState->setX(-dx);
+        mCurrentState->setY(-dy);
     }
 
     void reinstateMoveMomentoRedo(MoveMomento *momento) {
+        auto item = momento->mItem;
+        auto dx = momento->x;
+        auto dy = momento->y;
+        switch (item->type()) {
+        case LineType: qgraphicsitem_cast<Line*>(item)->setShear(dx, dy);
+            break;
+        case RectType: qgraphicsitem_cast<RectItem*>(item)->setShear(dx, dy);
+            break;
+        case CircleType: qgraphicsitem_cast<CircleItem*>(item)->setShear(dx, dy);
+            break;
+        }
 
+        mCurrentState = momento->mState;
     }
 
     void reinstateMomentoUndo(Momento *momento) {
