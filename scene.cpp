@@ -182,6 +182,27 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent *pe) {
 void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     auto m = event->buttons();
     if(m == Qt::NoButton) {
+        if(mode == Mode::Input) {
+            tmpRendering(event);
+        } else if(mode == Mode::Normal) {
+            if(m_type == ItemType::Line) {
+                foreach(auto item, items()) {
+                    if(item->type() == LineType) {
+                        if(item->boundingRect().contains(event->scenePos())) {
+                            QGraphicsSceneHoverEvent *hover = new QGraphicsSceneHoverEvent;
+                            hover->setScenePos(event->scenePos());
+
+                            qgraphicsitem_cast<Line*>(item)->setHover(hover);
+                        } else {
+                            //qgraphicsitem_cast<Line*>(item)->setHover(hover);
+                        }
+
+                    }
+                }
+
+
+            }
+        }
         return;
     }
     if(m == Qt::LeftButton) {
@@ -370,17 +391,21 @@ void Scene::drawLine() {
         if(pointsVec.count() == 2) {
             //auto p1 = findDot(pointsVec.at(0));
             //auto p2 = findDot(pointsVec.at(1));
-            auto l = new Line(pointsVec.at(0), pointsVec.at(1));
+            //auto l = new Line(pointsVec.at(0), pointsVec.at(1));
+            qgraphicsitem_cast<Line*>(mCurrentItem)->setEnd(pointsVec.at(1));   //!!!
             //LineDot *line = new LineDot(p1.first, p1.second, p2.first, p2.second);
             //auto points = line->getLine();
             //map.addLine(points);
             addItem(l);
-            mCurrentState = l;
+            mCurrentState = mCurrentItem;
           //  addRect(line->getRect());
             pointsVec.clear();
             waitingPoint = false;
             emit endInputSignal();
         } else {
+            mCurrentItem = new Line();
+            qgraphicsitem_cast<Line*>(mCurrentItem)->setBegin(pointsVec.at(0));
+            addItem(mCurrentItem);
             waitingPoint = true;
         }
     }
