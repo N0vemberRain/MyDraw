@@ -128,23 +128,33 @@ public:
         tmpText = text;
     }
 
-    Momento* createMomento(MomentoType type) {
-        switch (type) {
-        case MomentoType::MoveMomento: return new MoveMomento(mCurrentState);
+    Momento* createMomento() {
+        Momento *m;
+        switch (mCurrentState->type()) {
+        case SceneStateType::MoveStateType: m = new MoveMomento(mCurrentState->getItem(),
+                                                                   mCurrentState->getX(),
+                                                                   mCurrentState->getY());
+            break;
+        case SceneStateType::AddingStateType: m = new AddingMomento(mCurrentState->getItem());
+            break;
+                //case MomentoType::ResizeMomento: return new ResizeMomento(mCurrentState);
+                  //  break;
+        default: m = nullptr;
         }
-        return new SceneMomento(mCurrentState);
+
+        return m;
     }
 
     void reinstateAddingItemMomentoUndo(AddingMomento *momento) {
-        auto list = items();
-        this->removeItem(momento->mState);
-        mCurrentState = this->items().last();
-        update();
-    }
+            auto list = items();
+            this->removeItem(momento->mItem);
+            mCurrentState->setItem(this->items().last());
+            update();
+        }
 
     void reinstateAddingItemMomentoRedo(AddingMomento *momento) {
         mCurrentState = momento->mState;
-        this->addItem(mCurrentState);
+        this->addItem(mCurrentState->getItem());
         auto list = items();
         update();
     }
@@ -166,11 +176,36 @@ public:
         }
     }
     void reinstateMomentoRedo(Momento *momento) {
-
+        switch (momento->type()) {
+        case MomentoType::MoveMomento: reinstateMomentoRedo(static_cast<MoveMomento*>(momento));
+            break;
+        case MomentoType::AddingItemMomento: reinstateAddingItemMomentoRedo(static_cast<AddingMomento*>(momento));
+            break;
+        }
     }
 
-    void changeState(SceneState *state) {
+    void setState(MomentoType type, QGraphicsItem *item, const qreal dx = 0, const qreal dy = 0) {
+        switch(type) {
+        case MomentoType::MoveMomento: mCurrentState = mStateFactory->createState(type, item, dx, dy);
+            break;
+        case MomentoType::AddingItemMomento: mCurrentState = mStateFactory->createState(type, item);
+            break;
+        case MomentoType::ResizeMomento: mCurrentState = mStateFactory->createState(type, item, dx, dy);
+            break;
+        }
+    }
 
+    void shearItem(QGraphicsItem *item, const qreal dx, const qreal dy) {
+        switch (item->type()) {
+        case LineType: qgraphicsitem_cast<Line*>(item)->setShear(dx, dy);
+            break;
+        case RectType: qgraphicsitem_cast<RectItem*>(item)->setShear(dx, dy);
+            break;
+        case CircleType: qgraphicsitem_cast<CircleItem*>(item)->setShear(dx, dy);
+            break;
+        }
+
+        mCurrentState = new MoveState(item, dx, dy);
     }
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *pe);
@@ -217,6 +252,8 @@ private:
     void selectOneItemMode(QGraphicsSceneMouseEvent *event);
     void selectManyItemMode(QGraphicsSceneMouseEvent *event);
     void selectOff();
+    void tmpRendering(QGraphicsSceneMouseEvent *event);
+
 
     QPointF checkBind(QPointF &point);
 
@@ -243,7 +280,8 @@ private:
 
 
     SceneState *mCurrentState;
-
+    StateFactory *mStateFactory;
+    QGraphicsItem *mCurrentItem;
 
 signals:
     QGraphicsItem* editSignal(QGraphicsItem *item);

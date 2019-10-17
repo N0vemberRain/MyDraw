@@ -130,7 +130,7 @@ void Scene::inInputMode(QGraphicsSceneMouseEvent *pe) {
         pos = checkBind(pos);
     }
     pointsVec.append(pos);
-    emit getPointSignal(pos);
+    //emit getPointSignal(pos);
     waitingPoint = true;
     switch (m_type) {
     case ItemType::Point: drawPoint(); break;
@@ -140,6 +140,9 @@ void Scene::inInputMode(QGraphicsSceneMouseEvent *pe) {
     case ItemType::Polyline: drawPolyline(); break;
     case ItemType::Text: drawText(); break;
     }
+
+    update(sceneRect());
+    emit getPointSignal(pos);
 }
 
 void Scene::inSelectMode(QGraphicsSceneMouseEvent *pe) {        // Использовать
@@ -179,10 +182,42 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent *pe) {
     this->update();
 }
 
+void Scene::tmpRendering(QGraphicsSceneMouseEvent *event) {
+    if(pointsVec.count() != 1) {
+        return;
+    }
+
+    auto pos = event->scenePos();
+    auto line = qgraphicsitem_cast<Line*>(mCurrentItem);
+    line->setEnd(pos);
+    update(sceneRect());
+}
+
 void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     auto m = event->buttons();
     if(m == Qt::NoButton) {
-        return;
+        if(mode == Mode::Input) {
+                    tmpRendering(event);
+                } else if(mode == Mode::Normal) {
+                    if(m_type == ItemType::Line) {
+                        foreach(auto item, items()) {
+                            if(item->type() == LineType) {
+                                if(item->boundingRect().contains(event->scenePos())) {
+                                    QGraphicsSceneHoverEvent *hover = new QGraphicsSceneHoverEvent;
+                                    hover->setScenePos(event->scenePos());
+
+                                    qgraphicsitem_cast<Line*>(item)->setHover(hover);
+                                } else {
+                                    //qgraphicsitem_cast<Line*>(item)->setHover(hover);
+                                }
+
+                            }
+                        }
+
+
+                    }
+                }
+                return;
     }
     if(m == Qt::LeftButton) {
         foreach(auto item, this->items()) {
@@ -367,23 +402,27 @@ void Scene::slotAddPoint(const int x, const int y) {
 */
 void Scene::drawLine() {
     if(waitingPoint) {
-        if(pointsVec.count() == 2) {
-            //auto p1 = findDot(pointsVec.at(0));
-            //auto p2 = findDot(pointsVec.at(1));
-            auto l = new Line(pointsVec.at(0), pointsVec.at(1));
-            //LineDot *line = new LineDot(p1.first, p1.second, p2.first, p2.second);
-            //auto points = line->getLine();
-            //map.addLine(points);
-            addItem(l);
-            mCurrentState = l;
-          //  addRect(line->getRect());
-            pointsVec.clear();
-            waitingPoint = false;
-            emit endInputSignal();
-        } else {
-            waitingPoint = true;
+            if(pointsVec.count() == 2) {
+                //auto p1 = findDot(pointsVec.at(0));
+                //auto p2 = findDot(pointsVec.at(1));
+                //auto l = new Line(pointsVec.at(0), pointsVec.at(1));
+                qgraphicsitem_cast<Line*>(mCurrentItem)->setEnd(pointsVec.at(1));   //!!!
+                //LineDot *line = new LineDot(p1.first, p1.second, p2.first, p2.second);
+                //auto points = line->getLine();
+                //map.addLine(points);
+                //addItem(l);
+                mCurrentState = new AddingState(mCurrentItem);
+              //  addRect(line->getRect());
+                pointsVec.clear();
+                waitingPoint = false;
+                emit endInputSignal();
+            } else {
+                mCurrentItem = new Line();
+                qgraphicsitem_cast<Line*>(mCurrentItem)->setBegin(pointsVec.at(0));
+                addItem(mCurrentItem);
+                waitingPoint = true;
+            }
         }
-    }
 }
 
 void Scene::drawDotLine() {
@@ -431,7 +470,7 @@ void Scene::drawCircle() {
     if(pointsVec.count() == 2) {
         CircleItem *c = new CircleItem(pointsVec.at(0), pointsVec.at(1));
         this->addItem(c);
-        mCurrentState = c;
+        mCurrentState = new AddingState(c);
         pointsVec.clear();
         waitingPoint = false;
         emit endInputSignal();
@@ -448,7 +487,7 @@ void Scene::drawCircle(const double radius) {
     //Circle *r = new Circle(pointsVec.at(0), radius);
     CircleItem *c = new CircleItem(pointsVec.at(0), radius);
     this->addItem(c);
-    mCurrentState = c;
+    mCurrentState = new AddingState(c);
     pointsVec.clear();
     waitingPoint = false;
     emit endInputSignal();
@@ -478,7 +517,7 @@ void Scene::drawRect() {
         RectItem *r = new RectItem(pointsVec.at(0), pointsVec.at(1));
         //r->setFlag(QGraphicsItem::ItemIsMovable);
         this->addItem(r);
-        mCurrentState = r;
+        mCurrentState = new AddingState(r);
         pointsVec.clear();
         waitingPoint = false;
         emit endInputSignal();
@@ -498,7 +537,7 @@ void Scene::drawRect(const double width, const double height) {
     //Rect *r = new Rect(pointsVec.at(0), QPointF(bottomRightX, bottomRightY));
     RectItem *r = new RectItem(pointsVec.at(0), QPointF(bottomRightX, bottomRightY));
     this->addItem(r);
-    mCurrentState = r;
+    mCurrentState = new AddingState(r);
     pointsVec.clear();
     waitingPoint = false;
     emit endInputSignal();

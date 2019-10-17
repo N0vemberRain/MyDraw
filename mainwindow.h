@@ -46,7 +46,7 @@ public:
         mNumCommands++;
     }
 
-    void addMomento(SceneMomento *momento) {
+    void addMomento(Momento *momento) {
         //mMomentoList.append(momento);
         //mCurrentMomento = mMomentoList.count();
         mMomentoList.prepend(momento);
@@ -135,14 +135,11 @@ private:
     QAction *redoAction;
     QAction *undoAction;
     QAction *checkAction;
+    QAction *moveAction;
 
     QDockWidget *workWgtDock;
 
     QMdiArea *mMdiArea;
-
-    QList<QAction*> mActionList;
-    QList<SceneMomento*> mMomentoList;
-    int mNumAction;
 
     SceneCommand* mSceneComd;
     bool wgtInput;

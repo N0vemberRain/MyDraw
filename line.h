@@ -146,10 +146,7 @@ class Line : public QObject, public QGraphicsItem {
     Q_OBJECT
 public:
     enum { Type = LineType };
-    //explicit Line(const QPointF &p1, const QPointF &p2);
-    explicit Line(QObject *parent) : QObject(parent), QGraphicsItem() {
-        this->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
-    }
+    explicit Line(QObject *parent = nullptr);
     explicit Line(const QLineF &line);
     explicit Line(const QPointF &p1, const QPointF &p2);
     ~Line() override;
@@ -172,6 +169,20 @@ public:
     }
 
     void setShear(const double horizontal, const double vertical);
+    void setBegin(const QPointF &p) {
+            p1 = p;
+            update();
+        }
+        void setEnd(const QPointF &p) {
+            p2 = p;
+            mLine.setPoints(p1, p2);
+        }
+        QPointF getBegin() const { return mLine.p1(); }
+        QPointF getEnd() const { return mLine.p2(); }
+
+        void setHover(QGraphicsSceneHoverEvent *event) {
+            hoverEnterEvent(event);
+        }
 public slots:
     void select(bool state);
 protected:
@@ -180,14 +191,16 @@ protected:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                    QWidget *widget) override;
 
-
-
-    void updateTransform();
-private:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
+
+    void hoverMoveEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+private:
+    void updateTransform();
 
     QLineF mLine;
     QPen *mPen;
@@ -195,6 +208,10 @@ private:
 
     double mHorizontalShear;
     double mVerticalShear;
+
+    QPointF p1;
+    QPointF p2;
+    bool hovered;
 };
 
 

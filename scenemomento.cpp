@@ -2,10 +2,16 @@
 #include "scenestate.h"
 
 
+
+Momento::~Momento() {
+
+}
+
 AddingMomento::AddingMomento(QGraphicsItem *item)
     : mItem(item) {
     Momento::setType(MomentoType::AddingItemMomento);
     mState = new AddingState(mItem);
+     //Momento (mState),
 }
 
 AddingMomento::AddingMomento(AddingState *state)
