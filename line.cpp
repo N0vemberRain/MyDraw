@@ -2,6 +2,12 @@
 
 #include <QPainter>
 
+Line::Line(QObject *parent) : QObject(parent), QGraphicsItem() {
+    this->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+    mPen = new QPen(Qt::black, 1);
+    setAcceptHoverEvents(true);
+    hovered = false;
+}
 
 Line::Line(const QLineF &line)
     : QObject(), QGraphicsItem(), mLine(line) {
@@ -30,11 +36,23 @@ void Line::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     if(this->isSelected()) {
         mPen->setColor(Qt::red);
     }
-    painter->setPen(*mPen);
-    mPen->setColor(Qt::white);
-    QPainterPath path(mLine.p1());
-    path.lineTo(mLine.p2());
-    painter->drawPath(mapFromScene(path));
+    
+    if(hovered) {
+        painter->setPen(QPen(Qt::green, 2));
+    }
+    
+    if(!mLine.isNull()) {
+        painter->setPen(*mPen);
+        mPen->setColor(Qt::white);
+        QPainterPath path(mLine.p1());
+        path.lineTo(mLine.p2());
+        painter->drawPath(mapFromScene(path));
+    }
+    
+    painter->setPen(QPen(Qt::black, 3));
+    painter->drawPoint(p1);
+    painter->drawPoint(p2);
+    
     Q_UNUSED(option);
     Q_UNUSED(widget);
 }
@@ -118,6 +136,21 @@ void Line::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 
 void Line::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
 
+}
+
+
+void Line::hoverMoveEvent(QGraphicsSceneHoverEvent *event) {
+
+}
+
+void Line::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
+    hovered = true;
+    QGraphicsItem::hoverEnterEvent(event);
+}
+
+void Line::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
+    hovered = false;
+    QGraphicsItem::hoverLeaveEvent(event);
 }
 
 void Line::setShear(const double horizontal, const double vertical) {
