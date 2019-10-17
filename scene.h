@@ -262,6 +262,8 @@ private:
     void selectOneItemMode(QGraphicsSceneMouseEvent *event);
     void selectManyItemMode(QGraphicsSceneMouseEvent *event);
     void selectOff();
+    void tmpRendering(QGraphicsSceneMouseEvent *event);
+
 
     QPointF checkBind(QPointF &point);
 
@@ -289,7 +291,7 @@ private:
 
     SceneState *mCurrentState;
     StateFactory *mStateFactory;
-
+    QGraphicsItem *mCurrentItem;
 signals:
     QGraphicsItem* editSignal(QGraphicsItem *item);
     QGraphicsItem* moveSignal(QGraphicsItem *item);
