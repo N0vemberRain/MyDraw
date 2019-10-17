@@ -130,7 +130,7 @@ void Scene::inInputMode(QGraphicsSceneMouseEvent *pe) {
         pos = checkBind(pos);
     }
     pointsVec.append(pos);
-    emit getPointSignal(pos);
+    //emit getPointSignal(pos);
     waitingPoint = true;
     switch (m_type) {
     case ItemType::Point: drawPoint(); break;
@@ -140,6 +140,8 @@ void Scene::inInputMode(QGraphicsSceneMouseEvent *pe) {
     case ItemType::Polyline: drawPolyline(); break;
     case ItemType::Text: drawText(); break;
     }
+    update(sceneRect());
+    emit getPointSignal(pos);
 }
 
 void Scene::inSelectMode(QGraphicsSceneMouseEvent *pe) {        // Использовать
