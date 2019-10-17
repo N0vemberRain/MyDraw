@@ -181,6 +181,18 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent *pe) {
     this->update();
 }
 
+void Scene::tmpRendering(QGraphicsSceneMouseEvent *event) {
+    if(pointsVec.count() != 1) {
+        return;
+    }
+
+    auto pos = event->scenePos();
+    auto line = qgraphicsitem_cast<Line*>(mCurrentItem);
+    //line->setBegin(line->getEnd());
+    line->setEnd(pos);
+    update(sceneRect());
+}
+
 void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     auto m = event->buttons();
     if(m == Qt::NoButton) {
