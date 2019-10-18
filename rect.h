@@ -110,13 +110,8 @@ private:
 class RectItem : public QObject, public QGraphicsItem {
     Q_OBJECT
 public:
-    explicit RectItem(QObject *parent = nullptr)
-        : QObject(parent), QGraphicsItem() {
-        this->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
-        //setSelected(true);
-    }
-
     enum { Type = RectType };
+    explicit RectItem(QObject *parent = nullptr);
     explicit RectItem(const QRectF &rect);
     explicit RectItem(const QPointF &topLeft, const double width, const double height);
     explicit RectItem(const QPointF &topLeft, const QPointF &bottomRight);
@@ -146,8 +141,38 @@ public:
     void setShearHorizontal(const double shear);
     void setShear(const double horizontal, const double vertical);
     void move(const double horizontal, const double vertical);
+    
+    void setState(const ItemState state) { mState = state; }
+    void setBegin(const QPointF &p) {
+        //mLine.setP1(p);
+        mTopLeft = p;
+        update();
+    }
+    void setEnd(const QPointF &p) {
+
+        //mLine.setP2(p);
+        mBottomRight = p;
+        m_rect.setTopLeft(mTopLeft);
+        m_rect.setBottomRight(mBottomRight);
+        //mState = ItemState::Normal;
+    }
+    QPointF getBegin() const { return m_rect.topLeft(); }
+    QPointF getEnd() const { return m_rect.bottomRight(); }
+
+    void setHoverEvent(QGraphicsSceneHoverEvent *event) {
+        if(boundingRect().contains(event->scenePos())) {
+            hoverEnterEvent(event);
+        } else {
+            hoverLeaveEvent(event);
+        }
+    }
 signals:
     void sceneUpdate();
+   
+protected:
+    void hoverMoveEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
 private:
     QRectF boundingRect() const override {
         return m_rect;
@@ -188,6 +213,10 @@ private:
 
     QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value);
     void updateTransform();
+    void paintNormal(QPainter *painter);
+    void paintRendering(QPainter *painter);
+    void paintFocus(QPainter *painter);
+    void paintEdit(QPainter *painter);
 
     QRectF m_rect;
     QPen *m_pen;
@@ -196,6 +225,11 @@ private:
 
     double mHorizontalShear;
     double mVerticalShear;
+    
+    QPointF mTopLeft;
+    QPointF mBottomRight;
+    bool hovered;
+    ItemState mState;
 public slots:
     void select(bool state);
 
