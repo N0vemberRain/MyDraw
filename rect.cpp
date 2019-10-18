@@ -168,6 +168,14 @@ void Rect::setSelect() {
 
 /////////////////////////////////////////////////////////////////
 
+RectItem::RectItem(QObject *parent)
+    : QObject(parent), QGraphicsItem() {
+    this->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+    setAcceptHoverEvents(true);
+    hovered = false;
+    mState = ItemState::Rendering;
+}
+        
 RectItem::RectItem(const QRectF &rect)
     : QObject (), QGraphicsItem (), m_rect(rect) {
     m_pen = new QPen(Qt::black, 1);
@@ -292,7 +300,64 @@ void RectItem::move(const double horizontal, const double vertical) {
     update();
 }
 
+void RectItem::paintNormal(QPainter *painter) {
+    painter->setPen(QPen(Qt::black, 1));
+    painter->drawRect(m_rect);
+}
 
+void RectItem::paintRendering(QPainter *painter) {
+    if(!m_rect.isNull()) {
+        painter->setPen(QPen(Qt::black, 1));
+        painter->drawRect(m_rect);
+    }
+    painter->setPen(QPen(Qt::black, 3));
+    painter->drawPoint(mTopLeft);
+    painter->drawPoint(mBottomRight);
+}
+
+void RectItem::paintFocus(QPainter *painter) {
+    painter->setPen(QPen(Qt::green, 1));
+    painter->drawRect(m_rect);
+    painter->setPen(QPen(Qt::green, 3));
+    painter->drawPoint(mTopLeft);
+    painter->drawPoint(mBottomRight);
+}
+
+void RectItem::paintEdit(QPainter *painter) {
+    painter->setPen(QPen(Qt::blue, 2));
+    painter->drawRect(m_rect);
+    painter->setPen(QPen(Qt::blue, 3));
+    painter->drawPoint(mTopLeft);
+    painter->drawPoint(mBottomRight);
+}
+
+void RectItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+    switch (mState) {
+    case ItemState::Normal: paintNormal(painter); break;
+    case ItemState::Rendering: paintRendering(painter); break;
+    case ItemState::Focus: paintFocus(painter); break;
+    case ItemState::Edit: paintEdit(painter); break;
+    }
+
+    Q_UNUSED(option);
+    Q_UNUSED(widget);
+}
+
+void RectItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event) {
+
+}
+
+void RectItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
+    hovered = true;
+    mState = ItemState::Focus;
+    QGraphicsItem::hoverEnterEvent(event);
+}
+
+void RectItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
+    hovered = false;
+    mState = ItemState::Normal;
+    QGraphicsItem::hoverLeaveEvent(event);
+}
 
 
 
