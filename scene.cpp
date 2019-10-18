@@ -199,22 +199,17 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         if(mode == Mode::Input) {
             tmpRendering(event);
         } else if(mode == Mode::Normal) {
+            QGraphicsSceneHoverEvent *hover = new QGraphicsSceneHoverEvent;
+            hover->setScenePos(event->scenePos());
             if(m_type == ItemType::Line) {
                 foreach(auto item, items()) {
-                    if(item->type() == LineType) {
-                        if(item->boundingRect().contains(event->scenePos())) {
-                            QGraphicsSceneHoverEvent *hover = new QGraphicsSceneHoverEvent;
-                            hover->setScenePos(event->scenePos());
-
-                            qgraphicsitem_cast<Line*>(item)->setHover(hover);
-                        } else {
-                            //qgraphicsitem_cast<Line*>(item)->setHover(hover);
-                        }
-
+                    switch (item->type()) {
+                    case LineType: qgraphicsitem_cast<Line*>(item)->setHoverEvent(hover);
+                        break;
+                    case RectType: qgraphicsitem_cast<RectItem*>(item)->setHoverEvent(hover);
+                        break;
                     }
                 }
-
-
             }
         }
         return;
@@ -511,17 +506,19 @@ void Scene::drawRect() {
     if(!waitingPoint) {
         return;
     }
-
     if(pointsVec.count() == 2) {
-       // Rect *r = new Rect(pointsVec.at(0), pointsVec.at(1));
-        RectItem *r = new RectItem(pointsVec.at(0), pointsVec.at(1));
-        //r->setFlag(QGraphicsItem::ItemIsMovable);
-        this->addItem(r);
-        mCurrentState = r;
+        auto r = qgraphicsitem_cast<RectItem*>(mCurrentItem);
+        r->setEnd(pointsVec.at(1));
+        r->setState(ItemState::Normal);
         pointsVec.clear();
         waitingPoint = false;
         emit endInputSignal();
     } else {
+        mCurrentItem = new RectItem();
+        auto r = qgraphicsitem_cast<RectItem*>(mCurrentItem);
+        r->setBegin(pointsVec.at(0));
+        r->setState(ItemState::Rendering);
+        addItem(mCurrentItem);
         waitingPoint = true;
     }
 }
