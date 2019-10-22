@@ -149,12 +149,14 @@ public:
         update();
     }
     void setEnd(const QPointF &p) {
-
-        //mLine.setP2(p);
         mBottomRight = p;
         m_rect.setTopLeft(mTopLeft);
         m_rect.setBottomRight(mBottomRight);
-        //mState = ItemState::Normal;
+
+        mBottomLeft.setX(mTopLeft.x());
+        mBottomLeft.setY(mBottomRight.y());
+        mTopRight.setX(mBottomRight.x());
+        mTopRight.setY(mTopLeft.ry());
     }
     QPointF getBegin() const { return m_rect.topLeft(); }
     QPointF getEnd() const { return m_rect.bottomRight(); }
