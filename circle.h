@@ -107,13 +107,37 @@ public:
     void setData(const QStringList &data);
     QStringList getData() const;
     void setShear(const double horizontal, const double vertical);
+    void setOrigin(const QPointF &o) {
+        mOrigin = o;
+    }
 
+    void setRadius(const QPointF &rp) {
+        mRPoint = rp;
+    }
+
+    void setState(const ItemState state) { mState = state; }
+    void setHoverEvent(QGraphicsSceneHoverEvent *event) {
+        if(boundingRect().contains(event->scenePos())) {
+            hoverEnterEvent(event);
+        } else {
+            hoverLeaveEvent(event);
+        }
+    }
 public slots:
     void select(bool state);
 
 signals:
+    
+protected:
+    void hoverMoveEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
 
 private:
+    void paintNormal(QPainter *painter);
+    void paintRendering(QPainter *painter);
+    void paintFocus(QPainter *painter);
+    void paintEdit(QPainter *painter);
     void updateTransform();
 
     QRectF boundingRect() const {
@@ -160,7 +184,7 @@ private:
 
     double mHorizontalShear;
     double mVerticalShear;
-
+    ItemState mState;
 };
 
 
