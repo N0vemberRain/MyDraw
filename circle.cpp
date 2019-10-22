@@ -131,4 +131,56 @@ void CircleItem::setData(const QStringList &data) {
             continue;
         }
     }
+    
+    void CircleItem::paintNormal(QPainter *painter) {
+    painter->setPen(QPen(Qt::black, 1));
+    painter->drawEllipse(mapRectFromScene(makeCircle()));
+}
+
+void CircleItem::paintRendering(QPainter *painter) {
+    if(!makeCircle().isNull()) {
+        painter->drawEllipse(mapRectFromScene(makeCircle()));
+    }
+    painter->setPen(QPen(Qt::black, 3));
+    painter->drawPoint(mOrigin);
+}
+
+void CircleItem::paintFocus(QPainter *painter) {
+    painter->setPen(QPen(Qt::green, 1));
+    painter->drawEllipse(mapRectFromScene(makeCircle()));
+    painter->setPen(QPen(Qt::green, 3));
+    painter->drawPoint(mOrigin);
+}
+
+void CircleItem::paintEdit(QPainter *painter) {
+
+}
+
+void CircleItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+    switch (mState) {
+    case ItemState::Normal: paintNormal(painter); break;
+    case ItemState::Rendering: paintRendering(painter); break;
+    case ItemState::Focus: paintFocus(painter); break;
+    case ItemState::Edit: paintEdit(painter); break;
+    }
+
+    Q_UNUSED(option);
+    Q_UNUSED(widget);
+}
+
+void CircleItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event) {
+
+}
+
+void CircleItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
+    //hovered = true;
+    mState = ItemState::Focus;
+    QGraphicsItem::hoverEnterEvent(event);
+}
+
+void CircleItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
+    //hovered = false;
+    mState = ItemState::Normal;
+    QGraphicsItem::hoverLeaveEvent(event);
+}
 }
