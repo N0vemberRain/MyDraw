@@ -187,9 +187,18 @@ void Scene::tmpRendering(QGraphicsSceneMouseEvent *event) {
     }
 
     auto pos = event->scenePos();
-    auto line = qgraphicsitem_cast<Line*>(mCurrentItem);
-    //line->setBegin(line->getEnd());
-    line->setEnd(pos);
+    auto p = findDot(event->scenePos());
+    if(mCurrentItem == nullptr) {
+        return;
+    }
+    switch (mCurrentItem->type()) {
+    case LineType: qgraphicsitem_cast<LineDot*>(mCurrentItem)->setEnd(p.first, p.second);
+        break;
+    case RectType: qgraphicsitem_cast<RectDot*>(mCurrentItem)->setEnd(p.first, p.second);
+        break;
+    case CircleType: qgraphicsitem_cast<CircleDot*>(mCurrentItem)->setRadius(p.first);
+        break;
+    }
     update(sceneRect());
 }
 
@@ -207,6 +216,8 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
                     case LineType: qgraphicsitem_cast<Line*>(item)->setHoverEvent(hover);
                         break;
                     case RectType: qgraphicsitem_cast<RectItem*>(item)->setHoverEvent(hover);
+                        break;
+                    case CircleType: qgraphicsitem_cast<CircleItem*>(item)->setHoverEvent(hover);
                         break;
                     }
                 }
@@ -463,13 +474,20 @@ void Scene::drawCircle() {
     }
 
     if(pointsVec.count() == 2) {
-        CircleItem *c = new CircleItem(pointsVec.at(0), pointsVec.at(1));
-        this->addItem(c);
-        mCurrentState = c;
+        //Circle *c = new Circle(pointsVec.at(0), pointsVec.at(1));
+        //CircleItem *c = new CircleItem(pointsVec.at(0), pointsVec.at(1));
+        auto c = qgraphicsitem_cast<CircleItem*>(mCurrentItem);
+        c->setRadius(pointsVec.at(1));
+        c->setState(ItemState::Normal);
         pointsVec.clear();
         waitingPoint = false;
         emit endInputSignal();
     } else {
+        mCurrentItem = new CircleItem();
+        auto c = qgraphicsitem_cast<CircleItem*>(mCurrentItem);
+        c->setOrigin(pointsVec.at(0));
+        c->setState(ItemState::Rendering);
+        addItem(c);
         waitingPoint = true;
     }
 }
