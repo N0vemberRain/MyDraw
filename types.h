@@ -22,6 +22,7 @@ enum class ItemType { Point = 0, Line = 1, Ellipse = 2, Rect = 3, Circle = 4,
 enum class Mode { Normal = 0, Input = 1, Edit = 2, Select = 4 };
 enum class MomentoType { AddingItemMomento = 0, MoveMomento = 1, ResizeMomento = 2 };
 enum class SceneStateType { AddingStateType = 0, MoveStateType = 1, ResizeStateType = 2 };
+enum class ItemState { Normal = 0, Rendering = 1, Edit = 2, Focus = 3 };
 
 #endif // TYPES_H
 

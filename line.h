@@ -180,9 +180,15 @@ public:
         QPointF getBegin() const { return mLine.p1(); }
         QPointF getEnd() const { return mLine.p2(); }
 
-        void setHover(QGraphicsSceneHoverEvent *event) {
-            hoverEnterEvent(event);
+        void setHoverEvent(QGraphicsSceneHoverEvent *event) {
+            if(boundingRect().contains(event->scenePos())) {
+                hoverEnterEvent(event);
+            } else {
+                hoverLeaveEvent(event);
+            }
         }
+
+        void setState(const ItemState state) { mState = state; }
 public slots:
     void select(bool state);
 protected:
@@ -195,15 +201,19 @@ protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
-
+    
     void hoverMoveEvent(QGraphicsSceneHoverEvent *event) override;
     void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+
 private:
     void updateTransform();
+    void paintNormal(QPainter *painter);
+    void paintRendering(QPainter *painter);
+    void paintFocus(QPainter *painter);
+    void paintEdit(QPainter *painter);
 
     QLineF mLine;
-    QPen *mPen;
     QPointF mPreviousPoint;
 
     double mHorizontalShear;
@@ -211,7 +221,7 @@ private:
 
     QPointF p1;
     QPointF p2;
-    bool hovered;
+    ItemState mState;
 };
 
 

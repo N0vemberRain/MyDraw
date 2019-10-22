@@ -160,11 +160,37 @@ public:
     }
 
     void reinstateMoveMomentoUndo(MoveMomento *momento) {
+        auto item = momento->mItem;
+        auto dx = momento->x;
+        auto dy = momento->y;
+        switch (item->type()) {
+        case LineType: qgraphicsitem_cast<Line*>(item)->setShear(-dx, -dy);
+            break;
+        case RectType: qgraphicsitem_cast<RectItem*>(item)->setShear(-dx, -dy);
+            break;
+        case CircleType: qgraphicsitem_cast<CircleItem*>(item)->setShear(-dx, -dy);
+            break;
+        }
 
+        mCurrentState->setItem(item);
+        mCurrentState->setX(-dx);
+        mCurrentState->setY(-dy);
     }
 
     void reinstateMoveMomentoRedo(MoveMomento *momento) {
+        auto item = momento->mItem;
+        auto dx = momento->x;
+        auto dy = momento->y;
+        switch (item->type()) {
+        case LineType: qgraphicsitem_cast<Line*>(item)->setShear(dx, dy);
+            break;
+        case RectType: qgraphicsitem_cast<RectItem*>(item)->setShear(dx, dy);
+            break;
+        case CircleType: qgraphicsitem_cast<CircleItem*>(item)->setShear(dx, dy);
+            break;
+        }
 
+        mCurrentState = momento->mState;
     }
 
     void reinstateMomentoUndo(Momento *momento) {
@@ -206,6 +232,14 @@ public:
         }
 
         mCurrentState = new MoveState(item, dx, dy);
+    }
+    
+    void setState(MomentoType type, QGraphicsItem *item) {
+        mCurrentState = mStateFactory->createState(type, item);
+    }
+public slots:
+    void cancelCommand() {
+        removeItem(mCurrentItem);
     }
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *pe);
@@ -282,7 +316,6 @@ private:
     SceneState *mCurrentState;
     StateFactory *mStateFactory;
     QGraphicsItem *mCurrentItem;
-
 signals:
     QGraphicsItem* editSignal(QGraphicsItem *item);
     QGraphicsItem* moveSignal(QGraphicsItem *item);

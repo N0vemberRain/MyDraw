@@ -5,7 +5,6 @@
 
 Circle::Circle(const QPointF &origin, const double radius)
     : m_origin(origin), m_radius(radius) {
-    m_pen = new QPen(Qt::black, 1);
 
     m_rPoint.setX(m_origin.rx() + radius);
     m_rPoint.setY(m_origin.ry());
@@ -13,7 +12,6 @@ Circle::Circle(const QPointF &origin, const double radius)
 
 Circle::Circle(const QPointF &origin, const QPointF radius)
     : m_origin(origin), m_rPoint(radius) {
-    m_pen = new QPen(Qt::black, 1);
 }
 
 QRectF Circle::boundingRect() const {
@@ -42,14 +40,12 @@ CircleItem::CircleItem(const QPointF &origin, const double radius)
     : QObject (), QGraphicsItem (), mOrigin(origin), mRadius(radius) {
     mRPoint.setX(mOrigin.rx() + radius);
     mRPoint.setY(mOrigin.ry());
-    mPen = new QPen(Qt::black, 1);
     this->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
 }
 
 CircleItem::CircleItem(const QPointF &origin, const QPointF &radius)
     : QObject (), QGraphicsItem (), mOrigin(origin), mRPoint(radius) {
     mRadius = abs(mRPoint.x() - mOrigin.x());
-    mPen = new QPen(Qt::black, 1);
     this->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
 }
 
@@ -85,18 +81,9 @@ void CircleItem::setShear(const double horizontal, const double vertical) {
 
 void CircleItem::select(bool state) {
     this->setSelected(state);
-    if(this->isSelected()) {
-        mPen->setColor(Qt::green);
-        mPen->setWidth(2);
-    } else {
-        mPen->setColor(Qt::black);
-        mPen->setWidth(1);
-    }
 }
 
 QStringList CircleItem::getData() const {
-    mPen->setColor(Qt::blue);
-    mPen->setWidth(2);
     QStringList data;
     data << QString::number(this->type()) << "PO" << QString::number(mOrigin.x())
          << QString::number(mOrigin.y())
@@ -131,4 +118,57 @@ void CircleItem::setData(const QStringList &data) {
             continue;
         }
     }
+}
+
+void CircleItem::paintNormal(QPainter *painter) {
+    painter->setPen(QPen(Qt::white, 1));
+    painter->drawEllipse(mapRectFromScene(makeCircle()));
+}
+
+void CircleItem::paintRendering(QPainter *painter) {
+    if(!makeCircle().isNull()) {
+        painter->setPen(QPen(Qt::white, 1));
+        painter->drawEllipse(mapRectFromScene(makeCircle()));
+    }
+    painter->setPen(QPen(Qt::white, 3));
+    painter->drawPoint(mOrigin);
+}
+
+void CircleItem::paintFocus(QPainter *painter) {
+    painter->setPen(QPen(Qt::green, 1));
+    painter->drawEllipse(mapRectFromScene(makeCircle()));
+    painter->setPen(QPen(Qt::green, 3));
+    painter->drawPoint(mOrigin);
+}
+
+void CircleItem::paintEdit(QPainter *painter) {
+
+}
+
+void CircleItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+    switch (mState) {
+    case ItemState::Normal: paintNormal(painter); break;
+    case ItemState::Rendering: paintRendering(painter); break;
+    case ItemState::Focus: paintFocus(painter); break;
+    case ItemState::Edit: paintEdit(painter); break;
+    }
+
+    Q_UNUSED(option);
+    Q_UNUSED(widget);
+}
+
+void CircleItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event) {
+
+}
+
+void CircleItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
+    //hovered = true;
+    mState = ItemState::Focus;
+    QGraphicsItem::hoverEnterEvent(event);
+}
+
+void CircleItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
+    //hovered = false;
+    mState = ItemState::Normal;
+    QGraphicsItem::hoverLeaveEvent(event);
 }

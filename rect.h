@@ -94,8 +94,8 @@ protected:
     /*void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
     void hoverMoveEvent(QGraphicsSceneHoverEvent *event) override;
-    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
-*/
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;*/
+
 private:
     QRectF m_rect;
     QPointF m_topLeft;
@@ -110,20 +110,13 @@ private:
 class RectItem : public QObject, public QGraphicsItem {
     Q_OBJECT
 public:
-    explicit RectItem(QObject *parent = nullptr)
-        : QObject(parent), QGraphicsItem() {
-        this->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
-        //setSelected(true);
-    }
-
     enum { Type = RectType };
+    explicit RectItem(QObject *parent = nullptr);
     explicit RectItem(const QRectF &rect);
     explicit RectItem(const QPointF &topLeft, const double width, const double height);
     explicit RectItem(const QPointF &topLeft, const QPointF &bottomRight);
 
-    ~RectItem() override {
-        delete m_pen;
-    }
+    ~RectItem() override {}
 
     int type() const override { return Type; }
 
@@ -146,21 +139,45 @@ public:
     void setShearHorizontal(const double shear);
     void setShear(const double horizontal, const double vertical);
     void move(const double horizontal, const double vertical);
+    
+    void setState(const ItemState state) { mState = state; }
+    void setBegin(const QPointF &p) {
+        //mLine.setP1(p);
+        mTopLeft = p;
+        update();
+    }
+    void setEnd(const QPointF &p) {
+        mBottomRight = p;
+                m_rect.setTopLeft(mTopLeft);
+                m_rect.setBottomRight(mBottomRight);
+
+                mBottomLeft.setX(mTopLeft.x());
+                mBottomLeft.setY(mBottomRight.y());
+                mTopRight.setX(mBottomRight.x());
+                mTopRight.setY(mTopLeft.ry());
+    }
+    QPointF getBegin() const { return m_rect.topLeft(); }
+    QPointF getEnd() const { return m_rect.bottomRight(); }
+
+    void setHoverEvent(QGraphicsSceneHoverEvent *event) {
+        if(boundingRect().contains(event->scenePos())) {
+            hoverEnterEvent(event);
+        } else {
+            hoverLeaveEvent(event);
+        }
+    }
 signals:
     void sceneUpdate();
+   
+protected:
+    void hoverMoveEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
 private:
     QRectF boundingRect() const override {
         return m_rect;
     }
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-        painter->setPen(*m_pen);
-        m_pen->setColor(Qt::white);
-    //    painter->setBrush(Qt::green);
-        //painter->drawPolygon(mapToScene(m_rect));
-        painter->drawRect(mapRectFromScene(m_rect));
-        Q_UNUSED(option);
-        Q_UNUSED(widget);
-    }
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
        // this->setPos(mapToScene(event->pos()));
         auto dx = event->scenePos().rx() - mPreviousPoint.rx();
@@ -188,14 +205,23 @@ private:
 
     QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value);
     void updateTransform();
+    void paintNormal(QPainter *painter);
+    void paintRendering(QPainter *painter);
+    void paintFocus(QPainter *painter);
+    void paintEdit(QPainter *painter);
 
     QRectF m_rect;
-    QPen *m_pen;
 
     QPointF mPreviousPoint;
 
     double mHorizontalShear;
     double mVerticalShear;
+    
+    QPointF mTopLeft;
+    QPointF mBottomRight;
+    QPointF mBottomLeft;
+    QPointF mTopRight;
+    ItemState mState;
 public slots:
     void select(bool state);
 

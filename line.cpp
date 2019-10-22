@@ -4,15 +4,12 @@
 
 Line::Line(QObject *parent) : QObject(parent), QGraphicsItem() {
     this->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
-    mPen = new QPen(Qt::black, 1);
     setAcceptHoverEvents(true);
-    hovered = false;
 }
 
 Line::Line(const QLineF &line)
     : QObject(), QGraphicsItem(), mLine(line) {
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
-    mPen = new QPen(Qt::black, 1);
 }
 
 Line::Line(const QPointF &p1, const QPointF &p2)
@@ -21,7 +18,6 @@ Line::Line(const QPointF &p1, const QPointF &p2)
     mLine.setP2(p2);
 
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
-    mPen = new QPen(Qt::black, 1);
 }
 
 Line::~Line() {
@@ -32,29 +28,46 @@ QRectF Line::boundingRect() const {
     return QRectF(mLine.p1(), mLine.p2());
 }
 
-void Line::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    if(this->isSelected()) {
-        mPen->setColor(Qt::red);
-    }
+void Line::paintNormal(QPainter *painter) {
+    painter->setPen(QPen(Qt::white, 1));
+    QPainterPath path(mLine.p1());
+    path.lineTo(mLine.p2());
+    painter->drawPath(mapFromScene(path));
+}
 
-    if(hovered) {
-        painter->setPen(QPen(Qt::green, 2));
-    } else {
-        mPen->setColor(Qt::white);
-        painter->setPen(*mPen);
-    }
-
+void Line::paintRendering(QPainter *painter) {
     if(!mLine.isNull()) {
-        painter->setPen(*mPen);
-        //mPen->setColor(Qt::white);
+        painter->setPen(QPen(Qt::white, 1));
         QPainterPath path(mLine.p1());
         path.lineTo(mLine.p2());
         painter->drawPath(mapFromScene(path));
     }
-
     painter->setPen(QPen(Qt::white, 3));
     painter->drawPoint(p1);
     painter->drawPoint(p2);
+}
+
+void Line::paintEdit(QPainter *painter) {
+
+}
+
+void Line::paintFocus(QPainter *painter) {
+    painter->setPen(QPen(Qt::green, 1));
+    QPainterPath path(mLine.p1());
+    path.lineTo(mLine.p2());
+    painter->drawPath(mapFromScene(path));
+    painter->setPen(QPen(Qt::green, 3));
+    painter->drawPoint(p1);
+    painter->drawPoint(p2);
+}
+
+void Line::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+    switch (mState) {
+    case ItemState::Normal: paintNormal(painter); break;
+    case ItemState::Rendering: paintRendering(painter); break;
+    case ItemState::Focus: paintFocus(painter); break;
+    case ItemState::Edit: paintEdit(painter); break;
+    }
 
     Q_UNUSED(option);
     Q_UNUSED(widget);
@@ -90,8 +103,6 @@ void Line::setData(const QStringList &data) {
 }
 
 QStringList Line::getData() const {
-    mPen->setColor(Qt::blue);
-    mPen->setWidth(2);
     QStringList data;
     data << QString::number(this->type()) << "P1" << QString::number(mLine.p1().x())
          << QString::number(mLine.p1().y())
@@ -104,13 +115,6 @@ QStringList Line::getData() const {
 
 void Line::select(bool state) {
     this->setSelected(state);
-    if(this->isSelected()) {
-        mPen->setColor(Qt::green);
-        mPen->setWidth(2);
-    } else {
-        mPen->setColor(Qt::black);
-        mPen->setWidth(1);
-    }
 }
 
 void Line::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
@@ -147,12 +151,12 @@ void Line::hoverMoveEvent(QGraphicsSceneHoverEvent *event) {
 }
 
 void Line::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
-    hovered = true;
+    mState = ItemState::Focus;
     QGraphicsItem::hoverEnterEvent(event);
 }
 
 void Line::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
-    hovered = false;
+    mState = ItemState::Normal;
     QGraphicsItem::hoverLeaveEvent(event);
 }
 

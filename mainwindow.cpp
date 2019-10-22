@@ -262,6 +262,9 @@ void MainWindow::createDockInputWgt() {
             getScene()->removeItem(currentItem);
             getScene()->addShape(currentData);
         }
+        if(m_mode == Mode::Input) {
+            getScene()->cancelCommand();
+        }
         delete this->inWgt;
         delete this->dockInputWgt;
         changeMode(Mode::Normal);

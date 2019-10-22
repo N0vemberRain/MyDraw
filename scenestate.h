@@ -74,7 +74,6 @@ public:
 
 class StateFactory {
     public:
-
     SceneState* createState(const MomentoType type, QGraphicsItem *item, const qreal dx = 0, const qreal dy = 0) {
         SceneState *state;
         switch(type) {

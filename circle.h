@@ -107,26 +107,43 @@ public:
     void setData(const QStringList &data);
     QStringList getData() const;
     void setShear(const double horizontal, const double vertical);
+    void setOrigin(const QPointF &o) {
+            mOrigin = o;
+        }
 
+        void setRadius(const QPointF &rp) {
+            mRPoint = rp;
+        }
+
+        void setState(const ItemState state) { mState = state; }
+        void setHoverEvent(QGraphicsSceneHoverEvent *event) {
+            if(boundingRect().contains(event->scenePos())) {
+                hoverEnterEvent(event);
+            } else {
+                hoverLeaveEvent(event);
+            }
+        }
 public slots:
     void select(bool state);
 
 signals:
 
+protected:
+    void hoverMoveEvent(QGraphicsSceneHoverEvent *event) override;
+        void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+        void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+
 private:
+    void paintNormal(QPainter *painter);
+        void paintRendering(QPainter *painter);
+        void paintFocus(QPainter *painter);
+        void paintEdit(QPainter *painter);
     void updateTransform();
 
     QRectF boundingRect() const {
         return makeCircle(); //QRectF (-30,-30,35,35);
     }
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-        painter->setPen(*mPen);
-        mPen->setColor(Qt::white);
-        //painter->setBrush(Qt::green);
-        painter->drawEllipse(mapRectFromScene(makeCircle()));
-        Q_UNUSED(option);
-        Q_UNUSED(widget);
-    }
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         auto dx = event->scenePos().rx() - mPreviousPoint.rx();
         auto dy = event->scenePos().ry() - mPreviousPoint.ry();
@@ -156,11 +173,10 @@ private:
     QPointF mOrigin;
     QPointF mRPoint;
     double mRadius;
-    QPen *mPen;
 
     double mHorizontalShear;
     double mVerticalShear;
-
+    ItemState mState;
 };
 
 
