@@ -8,8 +8,10 @@
 #include <QVBoxLayout>
 #include <QComboBox>
 #include <QTextEdit>
+#include <QCheckBox>
 
 #include "types.h"
+
 
 class InputWgt : public QWidget {
     Q_OBJECT
@@ -22,6 +24,15 @@ public:
         mCancelButton = new QPushButton("&Стоп");
         connect(mCancelButton, SIGNAL(clicked()), this, SLOT(slotCancel()));
         mCancelButton->setStyleSheet("background-color: white;\ncolor: black;\nfont: 14px;");
+
+        mContinuousInput = new QCheckBox(tr("&Непрерывный ввод"));
+        mContinuousInput->setCheckState(Qt::CheckState::Checked);
+        connect(mContinuousInput, &QCheckBox::stateChanged, this, [this](const int state) {
+            if(state)
+                mMode = InputMode::Continuous;
+            else
+                mMode = InputMode::Single;
+        });
 
         mLayout = new QGridLayout;
         mLayout->addWidget(mOkButton, 0, 0);
@@ -45,10 +56,16 @@ public:
     QGridLayout* getLayout() {
         return mLayout;
     }
+    InputMode getInputMode() const { return mMode; }
 
     virtual QStringList getData() const = 0;
     virtual void setData(const QStringList &data) = 0;
     virtual void addStyleSheet() = 0;
+    InputWgtType type() const { return mType; }
+protected:
+    QCheckBox* continuousInputBox() { return mContinuousInput; }
+    void setType(const InputWgtType type) { mType = type; }
+
 private slots:
     virtual void slotOk() = 0;
     virtual void slotCancel() = 0;
@@ -57,6 +74,9 @@ private:
     QPushButton *mOkButton;
     QPushButton *mCancelButton;
     QGridLayout *mLayout;
+    QCheckBox *mContinuousInput;
+    InputMode mMode;
+    InputWgtType mType;
 
 signals:
    // virtual void okSignal(const QStringList &data);
@@ -87,6 +107,7 @@ public:
     virtual QStringList getData() const = 0;
     virtual void setData(const QStringList &data) = 0;
     virtual void addStyleSheet();
+
 protected:
     QString getPosX() const { return mPosXLine->text(); }
     QString getPosY() const { return mPosYLine->text(); }
@@ -122,6 +143,7 @@ public:
         getLayout()->addWidget(mEndLabel, 3, 0, 1, 2);
         getLayout()->addWidget(mEndXLine, 4, 0);
         getLayout()->addWidget(mEndYLine, 4, 1);
+        getLayout()->addWidget(continuousInputBox(), 5, 0, 1, 2);
 
         setLayout(getLayout());
 
@@ -129,7 +151,7 @@ public:
             getLayout()->setRowStretch(i, 1);
         }
 
-
+        setType(InputWgtType::Line);
     }
 
     virtual ~LineInputWgt() {}
@@ -137,6 +159,9 @@ public:
     virtual QStringList getData() const;
     virtual void setData(const QStringList &data);
     virtual void addStyleSheet();
+    void setBegin(const QString &p);
+    void setEnd(const QString &p);
+    void setData(const QString &data);
 private slots:
     virtual void slotOk();
     virtual void slotCancel();

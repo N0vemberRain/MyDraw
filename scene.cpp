@@ -20,6 +20,7 @@ Scene::Scene(QObject *parent )
     addItem(&selectArea);
     addRect(QRect(10, 10, 420, 297), QPen(Qt::white, 2));
     addRect(this->sceneRect(), QPen(Qt::white, 1));
+    mCurrentItem = nullptr;
 }
 
 Scene::~Scene() {
@@ -129,7 +130,7 @@ void Scene::inInputMode(QGraphicsSceneMouseEvent *pe) {
     if(bindState) {
         pos = checkBind(pos);
     }
-    pointsVec.append(pos);
+    mPoints.append(pos);
     //emit getPointSignal(pos);
     waitingPoint = true;
     switch (m_type) {
@@ -166,7 +167,7 @@ void Scene::inSelectMode(QGraphicsSceneMouseEvent *pe) {        // Исполь�
 }
 
 void Scene::mousePressEvent(QGraphicsSceneMouseEvent *pe) {
-   // pointsVec.append(pe->scenePos());
+   // mPoints.append(pe->scenePos());
 //    drawLine();
     //drawPoint();
     switch (mode) {
@@ -182,12 +183,14 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent *pe) {
 }
 
 void Scene::tmpRendering(QGraphicsSceneMouseEvent *event) {
-    if(pointsVec.count() != 1) {
+    if(mPoints.count() != 1) {
         return;
     }
 
     switch (mCurrentItem->type()) {
         case LineType: qgraphicsitem_cast<Line*>(mCurrentItem)->setEnd(event->scenePos());
+        emit signalPoint(QString("P2 %1,%2").arg(event->scenePos().x()).
+                         arg(event->scenePos().y()));
             break;
         case RectType: qgraphicsitem_cast<RectItem*>(mCurrentItem)->setEnd(event->scenePos());
             break;
@@ -329,23 +332,23 @@ void Scene::drawText() {
         emit textPos();
         return;
     }
-    //Text text(this, pointsVec.at(0), "Text");
-    //this->addItem(new Text(pointsVec.at(0), tmpText));
+    //Text text(this, mPoints.at(0), "Text");
+    //this->addItem(new Text(mPoints.at(0), tmpText));
 
-    TextItem item(pointsVec.at(0), "Text", "11");
+    TextItem item(mPoints.at(0), "Text", "11");
     this->addItem(&item);
-    pointsVec.clear();
+    mPoints.clear();
     waitingPoint = false;
     emit endInputSignal();
 }
 
 void Scene::drawText(const QString &text, const QString &fontHeight) {
-    //Text t(this, pointsVec.at(0), text);
+    //Text t(this, mPoints.at(0), text);
 
-    //this->addItem(new Text(pointsVec.at(0), text));
-    TextItem *textItem = new TextItem(pointsVec.at(0), text, fontHeight);
+    //this->addItem(new Text(mPoints.at(0), text));
+    TextItem *textItem = new TextItem(mPoints.at(0), text, fontHeight);
     this->addItem(textItem);
-    pointsVec.clear();
+    mPoints.clear();
     waitingPoint = false;
     emit endInputSignal();
 
@@ -365,11 +368,11 @@ QRectF Scene::findPixRect(const QPointF &p) {
 }
 
 void Scene::drawPoint() {
-   // auto point = new Point(pointsVec.at(0));
-    //this->addItem(new Point(pointsVec.at(0)));
+   // auto point = new Point(mPoints.at(0));
+    //this->addItem(new Point(mPoints.at(0)));
 
-    auto xy = findDot(pointsVec.at(0));
-    auto r = findPixRect(pointsVec.at(0));
+    auto xy = findDot(mPoints.at(0));
+    auto r = findPixRect(mPoints.at(0));
     Dot *dot = new Dot(xy.first, xy.second, r.topLeft().x(), r.topLeft().y());
     //map.addPoint(coords.first, coords.second);
     this->addItem(dot);
@@ -377,7 +380,7 @@ void Scene::drawPoint() {
    // auto c = new CheckRect(xy.first, xy.second, r.topLeft().x(), r.topLeft().y());
     //addItem(c);
     //addItem(new CheckRect);
-    pointsVec.clear();
+    mPoints.clear();
     emit endInputSignal();
     update();
 }
@@ -388,10 +391,10 @@ void Scene::slotAddPoint(const int x, const int y) {
 
 /*void Scene::drawLine() {
     if(waitingPoint) {
-        if(pointsVec.count() == 2) {
-            Line *l = new Line(pointsVec.at(0), pointsVec.at(1));
+        if(mPoints.count() == 2) {
+            Line *l = new Line(mPoints.at(0), mPoints.at(1));
             this->addItem(l);
-            pointsVec.clear();
+            mPoints.clear();
             waitingPoint = false;
             emit endInputSignal();
         } else {
@@ -402,45 +405,63 @@ void Scene::slotAddPoint(const int x, const int y) {
 */
 void Scene::drawLine() {
     if(waitingPoint) {
-            if(pointsVec.count() == 2) {
-                //auto p1 = findDot(pointsVec.at(0));
-                //auto p2 = findDot(pointsVec.at(1));
-                //auto l = new Line(pointsVec.at(0), pointsVec.at(1));
+            if(mPoints.count() == 2) {
+                //auto p1 = findDot(mPoints.at(0));
+                //auto p2 = findDot(mPoints.at(1));
+                //auto l = new Line(mPoints.at(0), mPoints.at(1));
                 auto l = qgraphicsitem_cast<Line*>(mCurrentItem);   //!!!
-                l->setEnd(pointsVec.at(1));
-                l->setState(ItemState::Normal);
+                l->setEnd(mPoints.at(1));
+                //l->setState(ItemState::Normal);
                 //LineDot *line = new LineDot(p1.first, p1.second, p2.first, p2.second);
                 //auto points = line->getLine();
                 //map.addLine(points);
                 //addItem(l);
-                mCurrentState = new AddingState(mCurrentItem);
+               // mCurrentState = new AddingState(mCurrentItem);
               //  addRect(line->getRect());
-                pointsVec.clear();
+                //mPoints.clear();
                 waitingPoint = false;
-                emit endInputSignal();
+                //emit endInputSignal();
+                emit signalPoint(QString("P2 %1,%2").arg(mPoints.at(1).x()).
+                                 arg(mPoints.at(1).y()));
+
             } else {
                 mCurrentItem = new Line();
                 auto l = qgraphicsitem_cast<Line*>(mCurrentItem);   //!!!
-                l->setBegin(pointsVec.at(0));
+                l->setBegin(mPoints.at(0));
                 l->setState(ItemState::Rendering);
                 addItem(mCurrentItem);
                 waitingPoint = true;
+                emit signalPoint(QString("P1 %1,%2").arg(mPoints.at(0).x()).
+                                 arg(mPoints.at(0).y()));
             }
         }
 }
 
+void Scene::drawLine(const QPointF &p1, const QPointF &p2) {
+    //mCurrentItem = new Line(p1, p2);                    // Утечки памяти нет
+    Q_ASSERT(mCurrentItem != nullptr);
+    auto l = qgraphicsitem_cast<Line*>(mCurrentItem);
+    l->setState(ItemState::Normal);
+    mCurrentState = new AddingState(mCurrentItem);
+    //addItem(l);
+    mPoints.clear();
+    //delete mCurrentItem;
+    waitingPoint = false;
+   // emit endInputSignal();
+}
+
 void Scene::drawDotLine() {
     if(waitingPoint) {
-        if(pointsVec.count() == 2) {
-            //auto p1 = findDot(pointsVec.at(0));
-            //auto p2 = findDot(pointsVec.at(1));
-            LineDot *line = new LineDot(static_cast<int>(pointsVec.at(0).x()),
-                                        static_cast<int>(pointsVec.at(0).y()),
-                                        static_cast<int>(pointsVec.at(1).x()),
-                                        static_cast<int>(pointsVec.at(1).y()));
+        if(mPoints.count() == 2) {
+            //auto p1 = findDot(mPoints.at(0));
+            //auto p2 = findDot(mPoints.at(1));
+            LineDot *line = new LineDot(static_cast<int>(mPoints.at(0).x()),
+                                        static_cast<int>(mPoints.at(0).y()),
+                                        static_cast<int>(mPoints.at(1).x()),
+                                        static_cast<int>(mPoints.at(1).y()));
             auto points = line->getLine();
             map.addLine(points);
-            pointsVec.clear();
+            mPoints.clear();
             waitingPoint = false;
             emit endInputSignal();
         } else {
@@ -454,11 +475,11 @@ void Scene::drawDotLine() {
         return;
     }
 
-    if(pointsVec.count() == 2) {
-        //Circle *c = new Circle(pointsVec.at(0), pointsVec.at(1));
-        CircleItem *c = new CircleItem(pointsVec.at(0), pointsVec.at(1));
+    if(mPoints.count() == 2) {
+        //Circle *c = new Circle(mPoints.at(0), mPoints.at(1));
+        CircleItem *c = new CircleItem(mPoints.at(0), mPoints.at(1));
         this->addItem(c);
-        pointsVec.clear();
+        mPoints.clear();
         waitingPoint = false;
         emit endInputSignal();
     } else {
@@ -471,19 +492,19 @@ void Scene::drawCircle() {
         return;
     }
 
-    if(pointsVec.count() == 2) {
-            //Circle *c = new Circle(pointsVec.at(0), pointsVec.at(1));
-            //CircleItem *c = new CircleItem(pointsVec.at(0), pointsVec.at(1));
+    if(mPoints.count() == 2) {
+            //Circle *c = new Circle(mPoints.at(0), mPoints.at(1));
+            //CircleItem *c = new CircleItem(mPoints.at(0), mPoints.at(1));
             auto c = qgraphicsitem_cast<CircleItem*>(mCurrentItem);
-            c->setRadius(pointsVec.at(1));
+            c->setRadius(mPoints.at(1));
             c->setState(ItemState::Normal);
-            pointsVec.clear();
+            mPoints.clear();
             waitingPoint = false;
             emit endInputSignal();
         } else {
             mCurrentItem = new CircleItem();
             auto c = qgraphicsitem_cast<CircleItem*>(mCurrentItem);
-            c->setOrigin(pointsVec.at(0));
+            c->setOrigin(mPoints.at(0));
             c->setState(ItemState::Rendering);
             addItem(c);
             waitingPoint = true;
@@ -495,11 +516,14 @@ void Scene::drawCircle(const double radius) {
         return;
     }
 
-    //Circle *r = new Circle(pointsVec.at(0), radius);
-    CircleItem *c = new CircleItem(pointsVec.at(0), radius);
+    //Circle *r = new Circle(mPoints.at(0), radius);
+    //CircleItem *c = new CircleItem(mPoints.at(0), radius);
+    mCurrentItem = new CircleItem(mPoints.at(0), radius);
+    auto c = qgraphicsitem_cast<CircleItem*>(mCurrentItem);
+    c->setState(ItemState::Normal);
     this->addItem(c);
     mCurrentState = new AddingState(c);
-    pointsVec.clear();
+    mPoints.clear();
     waitingPoint = false;
     emit endInputSignal();
 }
@@ -509,11 +533,11 @@ void Scene::drawDotCircle(const int radiaus) {
         return;
     }
 
-    //auto p0 = findDot(pointsVec.at(0));
-    CircleDot *c = new CircleDot(static_cast<int>(pointsVec.at(0).x()),
-                                 static_cast<int>(pointsVec.at(0).y()), radiaus);
+    //auto p0 = findDot(mPoints.at(0));
+    CircleDot *c = new CircleDot(static_cast<int>(mPoints.at(0).x()),
+                                 static_cast<int>(mPoints.at(0).y()), radiaus);
     map.addLine(c->getPoints());
-    pointsVec.clear();
+    mPoints.clear();
     waitingPoint = false;
     emit endInputSignal();
 }
@@ -522,18 +546,18 @@ void Scene::drawRect() {
     if(!waitingPoint) {
         return;
     }
-    if(pointsVec.count() == 2) {
+    if(mPoints.count() == 2) {
         auto r = qgraphicsitem_cast<RectItem*>(mCurrentItem);
-        r->setEnd(pointsVec.at(1));
+        r->setEnd(mPoints.at(1));
         r->setState(ItemState::Normal);
         mCurrentState = new AddingState(r);
-        pointsVec.clear();
+        mPoints.clear();
         waitingPoint = false;
         emit endInputSignal();
     } else {
         mCurrentItem = new RectItem();
         auto r = qgraphicsitem_cast<RectItem*>(mCurrentItem);
-        r->setBegin(pointsVec.at(0));
+        r->setBegin(mPoints.at(0));
         r->setState(ItemState::Rendering);
         addItem(mCurrentItem);
         waitingPoint = true;
@@ -545,14 +569,17 @@ void Scene::drawRect(const double width, const double height) {
         return;
     }
 
-    auto bottomRightX = pointsVec.at(0).x() + width;
-    auto bottomRightY = pointsVec.at(0).y() + height;
+    auto bottomRightX = mPoints.at(0).x() + width;
+    auto bottomRightY = mPoints.at(0).y() + height;
 
-    //Rect *r = new Rect(pointsVec.at(0), QPointF(bottomRightX, bottomRightY));
-    RectItem *r = new RectItem(pointsVec.at(0), QPointF(bottomRightX, bottomRightY));
+    //Rect *r = new Rect(mPoints.at(0), QPointF(bottomRightX, bottomRightY));
+    //RectItem *r = new RectItem(mPoints.at(0), QPointF(bottomRightX, bottomRightY));
+    mCurrentItem = new RectItem(mPoints.at(0), QPointF(bottomRightX, bottomRightY));
+    auto r = qgraphicsitem_cast<RectItem*>(mCurrentItem);
+    r->setState(ItemState::Normal);
     this->addItem(r);
     mCurrentState = new AddingState(r);
-    pointsVec.clear();
+    mPoints.clear();
     waitingPoint = false;
     emit endInputSignal();
 }
@@ -586,7 +613,7 @@ void Scene::addShape(const QStringList &list) {
     }
 
     waitingPoint = true;
-    pointsVec.clear();
+    mPoints.clear();
     switch (m_type) {
     case ItemType::Point: setPointData(list); break;
     case ItemType::Line: setLineData(list); break;
@@ -604,21 +631,30 @@ void Scene::setPointData(const QStringList &data) {
         if(data.at(i) == "P") {
             int x = i + 1;
             int y = i + 2;
-            pointsVec.append(QPointF(data.at(x).toDouble(), data.at(y).toDouble()));
+            mPoints.append(QPointF(data.at(x).toDouble(), data.at(y).toDouble()));
         }
     }
     drawPoint();
 }
 
 void Scene::setLineData(const QStringList &data) {
+    QPointF p1;
+    QPointF p2;
     for(int i = 0; i < data.count(); i++) {
-        if(data.at(i) == "P1" || data.at(i) == "P2") {
+        if(data.at(i) == "P1") {
             int x = i + 1;
             int y = i + 2;
-            pointsVec.append(QPointF(data.at(x).toDouble(), data.at(y).toDouble()));
+            p1.setX(x);
+            p1.setY(y);
+        }
+        if(data.at(i) == "p2") {
+            int x = i + 1;
+            int y = i + 2;
+            p2.setX(x);
+            p2.setY(y);
         }
     }
-    drawLine();
+    drawLine(p1, p2);
 }
 
 void Scene::setLineDotData(const QStringList &data) {
@@ -626,7 +662,7 @@ void Scene::setLineDotData(const QStringList &data) {
         if(data.at(i) == "P1" || data.at(i) == "P2") {
             int x = i + 1;
             int y = i + 2;
-            pointsVec.append(QPointF(data.at(x).toInt(), data.at(y).toInt()));
+            mPoints.append(QPointF(data.at(x).toInt(), data.at(y).toInt()));
         }
     }
     drawDotLine();
@@ -641,7 +677,7 @@ void Scene::setRectData(const QStringList &data) {
             if(data.at(x).isEmpty() || data.at(y).isEmpty()) {
                 continue;
             }
-            pointsVec.append(QPointF(data.at(x).toDouble(), data.at(y).toDouble()));
+            mPoints.append(QPointF(data.at(x).toDouble(), data.at(y).toDouble()));
         }
         if(data.at(i) == "W") {
             int k = i + 1;
@@ -652,7 +688,7 @@ void Scene::setRectData(const QStringList &data) {
             height = data.at(k).toDouble();
         }
     }
-    if(pointsVec.count() == 1) {
+    if(mPoints.count() == 1) {
         drawRect(width, height);
     } else {
         drawRect();
@@ -668,7 +704,7 @@ void Scene::setCircleData(const QStringList &data) {
             if(data.at(x).isEmpty() || data.at(y).isEmpty()) {
                 continue;
             }
-            pointsVec.append(QPointF(data.at(x).toDouble(), data.at(y).toDouble()));
+            mPoints.append(QPointF(data.at(x).toDouble(), data.at(y).toDouble()));
         }
         if(data.at(i) == "R") {
             int k = i + 1;
@@ -676,7 +712,7 @@ void Scene::setCircleData(const QStringList &data) {
         }
     }
 
-    if(pointsVec.count() == 1) {
+    if(mPoints.count() == 1) {
         drawCircle(radius);
     } else {
         drawCircle();
@@ -692,7 +728,7 @@ void Scene::setCircleDotData(const QStringList &data) {
                 if(data.at(x).isEmpty() || data.at(y).isEmpty()) {
                     continue;
                 }
-                pointsVec.append(QPointF(data.at(x).toInt(), data.at(y).toInt()));
+                mPoints.append(QPointF(data.at(x).toInt(), data.at(y).toInt()));
             }
             if(data.at(i) == "R") {
                 int k = i + 1;
@@ -700,7 +736,7 @@ void Scene::setCircleDotData(const QStringList &data) {
             }
         }
 
-        if(pointsVec.count() == 1) {
+        if(mPoints.count() == 1) {
             drawDotCircle(radius);
         } else {
             drawCircle();
@@ -722,7 +758,7 @@ void Scene::setTextData(const QStringList &data) {
             if(data.at(x).isEmpty() || data.at(y).isEmpty()) {
                 continue;
             }
-            pointsVec.append(QPointF(data.at(x).toDouble(), data.at(y).toDouble()));
+            mPoints.append(QPointF(data.at(x).toDouble(), data.at(y).toDouble()));
         }
         if(data.at(i) == "T") {
             int k = i + 1;
@@ -733,7 +769,7 @@ void Scene::setTextData(const QStringList &data) {
         }
     }
 
-    if(pointsVec.count() == 1) {
+    if(mPoints.count() == 1) {
         drawText(text, fontHeight);
     } else {
         drawText();

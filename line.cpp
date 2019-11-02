@@ -8,14 +8,17 @@ Line::Line(QObject *parent) : QObject(parent), QGraphicsItem() {
 }
 
 Line::Line(const QLineF &line)
-    : QObject(), QGraphicsItem(), mLine(line) {
+    : QObject(nullptr), QGraphicsItem(), mLine(line) {
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
 }
 
 Line::Line(const QPointF &p1, const QPointF &p2)
-    : QObject (), QGraphicsItem () {
+    : QObject (nullptr), QGraphicsItem () {
     mLine.setP1(p1);
     mLine.setP2(p2);
+    this->p1 = p1;
+    this->p2 = p2;
+    setAcceptHoverEvents(true);
 
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
 }

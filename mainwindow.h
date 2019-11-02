@@ -92,6 +92,10 @@ private:
     void undo();
     void redo();
 
+    void renderLine(const QString &data);
+    void renderRect(const QString &data);
+    void renderCircle(const QString &data);
+
     InputWgt* createInputWgt(InputFactory *factory) {
         return factory->factoryMethod();
     }
@@ -136,6 +140,7 @@ private:
     QAction *undoAction;
     QAction *checkAction;
     QAction *moveAction;
+    QAction *checkScene;
 
     QDockWidget *workWgtDock;
 

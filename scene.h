@@ -111,13 +111,13 @@ public:
     }
     void clearAll() {
         foreach(auto item, this->items()) {
-            if(item->type() == GridType || item->type() == SelectType) {
+            if(item->type() == GridType || item->type() == SelectType || item->type() == QGraphicsRectItem::Type) {
                 continue;
             }
             this->removeItem(item);
             delete item;
         }
-        pointsVec.clear();
+        mPoints.clear();
         this->update();
     }
 
@@ -239,7 +239,12 @@ public:
     }
 public slots:
     void cancelCommand() {
-        removeItem(mCurrentItem);
+        if(mCurrentItem == nullptr)
+            return;
+        removeItem(mCurrentItem);           // Утечка памяти
+        // Не очищается вектор
+        delete mCurrentItem;
+        mPoints.clear();
     }
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *pe);
@@ -261,6 +266,7 @@ private:
     void drawGrid();
     void drawPoint();
     void drawLine();
+    void drawLine(const QPointF &p1, const QPointF &p2);
     void drawDotLine();
     void drawCircle();
     void drawCircle(const double radius);
@@ -293,7 +299,7 @@ private:
 
   //  float distance(const QPointF &p1, const QPointF &p2);
 
-    QVector<QPointF> pointsVec;
+    QVector<QPointF> mPoints;
     ItemType m_type;
     bool waitingPoint;
     bool targetItem;
@@ -322,6 +328,7 @@ signals:
     void textPos();
     QPointF getPointSignal(const QPointF &p);
     void endInputSignal();
+    QPointF signalPoint(const QString &p);
 };
 
 /*class SceneCommand {

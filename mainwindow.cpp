@@ -122,6 +122,8 @@ void MainWindow::createMenu() {
     checkAction = new QAction(tr("Check"));
     moveAction = new QAction(tr("&Сдвиг"));
 
+    checkScene = new QAction(tr("&Сцена"));
+
     connect(newFileAction, SIGNAL(triggered()), this, SLOT(slotNewFile()));
     connect(openFileAction, SIGNAL(triggered()), this, SLOT(slotOpenFile()));
     connect(saveFileAction, SIGNAL(triggered()), this, SLOT(slotSaveFile()));
@@ -168,11 +170,17 @@ void MainWindow::createMenu() {
         getScene()->update();
     });
 
+    connect(checkScene, &QAction::triggered, this, [this](){
+        auto list = this->getScene()->items();
+        int d = 5;
+    });
+
     fileMenu->addAction(newFileAction);
     fileMenu->addAction(openFileAction);
     fileMenu->addAction(saveFileAction);
     fileMenu->addAction(closeFileActions);
     fileMenu->addAction(exitAction);
+    fileMenu->addAction(checkScene);
 
     editMenu->addMenu(geometryMenu);
     editMenu->addMenu(moveMenu);
@@ -244,7 +252,7 @@ void MainWindow::createDockInputWgt() {
     dockInputWgt = new QDockWidget("Dock", this);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, dockInputWgt);
     dockInputWgt->setWidget(inWgt);
-    dockInputWgt->setStyleSheet("background: red;");
+    //dockInputWgt->setStyleSheet("background: red;");
 
     connect(inWgt, &InputWgt::okSignal, this, [this]() {
         getScene()->setTypeMode(Mode::Input);
@@ -253,8 +261,14 @@ void MainWindow::createDockInputWgt() {
             getScene()->addShape(data);
         }
 
+        if(inWgt->getInputMode() == InputMode::Single) {
+            delete this->inWgt;
+            delete this->dockInputWgt;
+            changeMode(Mode::Normal);
+            mSceneComd->addMomento(getScene()->createMomento());
+            return;
+        }
         mSceneComd->addMomento(getScene()->createMomento());
-        qDebug() << "Lambda Ok!";
     });
 
     connect(inWgt, &InputWgt::cancelSignal, this, [this]() {
@@ -262,13 +276,15 @@ void MainWindow::createDockInputWgt() {
             getScene()->removeItem(currentItem);
             getScene()->addShape(currentData);
         }
-        if(m_mode == Mode::Input) {
+        if(m_mode == Mode::Input && inWgt->getInputMode() == InputMode::Single) {
             getScene()->cancelCommand();
+        }
+        if(inWgt->getInputMode() == InputMode::Continuous) {
+            mSceneComd->addMomento(getScene()->createMomento());
         }
         delete this->inWgt;
         delete this->dockInputWgt;
         changeMode(Mode::Normal);
-        qDebug() << "Lambda cancel!";
     });
 }
 
@@ -341,6 +357,16 @@ void MainWindow::slotNewFile() {
     connect(scene, &QGraphicsScene::changed, this, [this]() {
         auto list = this->getScene()->items();
         qDebug() << "Scene is changed, " << list.count() << " " << list.last()->type();
+    });
+    connect(scene, &Scene::signalPoint, this, [this](const QString &data){
+        if(m_mode == Mode::Input) {
+            switch (inWgt->type()) {
+            case InputWgtType::Line: renderLine(data); break;
+            case InputWgtType::Rect: renderRect(data); break;
+            case InputWgtType::Circle: renderCircle(data); break;
+            default: return;
+            }
+        }
     });
     connect(scene, &Scene::endInputSignal, this, [this]() { this->wgtInput = false; });
     mScenes.append(scene);
@@ -774,4 +800,15 @@ void MainWindow::redo() {
 
 }
 
+void MainWindow::renderLine(const QString &data) {
+    dynamic_cast<LineInputWgt*>(inWgt)->setData(data);
+}
+
+void MainWindow::renderRect(const QString &data) {
+
+}
+
+void MainWindow::renderCircle(const QString &data) {
+
+}
 //D как A на 5 ладу, C#m как Em на 4 ладу, Dsus2 как A на 5 ладу

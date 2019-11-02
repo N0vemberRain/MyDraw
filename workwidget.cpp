@@ -1,6 +1,7 @@
 #include "workwidget.h"
 
 #include <QComboBox>
+#include <QRegExp>
 
 
 void FormInputWgt::slotOk() {
@@ -60,6 +61,24 @@ void LineInputWgt::addStyleSheet() {
     mEndYLine->setStyleSheet("background-color: white; color: black; font: 14px;");
 }
 
+void LineInputWgt::setData(const QString &data) {
+    QRegExp pExp("(P[12])\\s(\\d+\\.?\\d*),(\\d+\\.?\\d*)\\s?");
+    QRegExp p1Exp("(P1)\\s(\\d+\\.\\d*),(\\d+.\\d*)\\s?");
+
+    pExp.indexIn(data);
+    p1Exp.indexIn(data);
+    auto text = pExp.capturedTexts();
+    auto t = p1Exp.capturedTexts();
+    if(pExp.cap(1) == "P1") {
+        setPosX(pExp.cap(2));
+        setPosY(pExp.cap(3));
+    } else {
+        mEndXLine->setText(pExp.cap(2));
+        mEndYLine->setText(pExp.cap(3));
+    }
+
+}
+
 RectInputWgt::RectInputWgt()
     : FormInputWgt () {
     mEndLabel = new QLabel(tr("&Точка2"));
@@ -86,6 +105,7 @@ RectInputWgt::RectInputWgt()
     getLayout()->addWidget(mWidthLine, 5, 1);
     getLayout()->addWidget(mHeightLabel, 6, 0);
     getLayout()->addWidget(mHeightLine, 6, 1);
+    getLayout()->addWidget(continuousInputBox(), 7, 0, 1, 2);
 
     setLayout(getLayout());
 
@@ -94,6 +114,7 @@ RectInputWgt::RectInputWgt()
     }
 
     addStyleSheet();
+    setType(InputWgtType::Rect);
 }
 
 void RectInputWgt::slotOk() {
@@ -150,7 +171,7 @@ void RectInputWgt::addStyleSheet() {
     mWidthLine->setStyleSheet("background-color: white; color: black; font: 14px;");
     mHeightLine->setStyleSheet("background-color: white; color: black; font: 14px;");
 
-    setMaximumSize(200, 400);
+    setMaximumSize(200, 450);
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Maximum);
 }
 
@@ -173,6 +194,7 @@ CircleInputWgt::CircleInputWgt()
     getLayout()->addWidget(mRPYLine, 4, 1);
     getLayout()->addWidget(mRLabel, 5, 0);
     getLayout()->addWidget(mRLine, 5, 1);
+    getLayout()->addWidget(continuousInputBox(), 6, 0, 1, 2);
 
     setLayout(getLayout());
 
@@ -181,6 +203,7 @@ CircleInputWgt::CircleInputWgt()
     }
 
     addStyleSheet();
+    setType(InputWgtType::Circle);
 }
 
 void CircleInputWgt::slotOk() {
@@ -230,6 +253,9 @@ void CircleInputWgt::addStyleSheet() {
     mRPYLine->setStyleSheet("background-color: white; color: black; font: 14px;");
     mRLabel->setStyleSheet("color: white; font: 14px;");
     mRLine->setStyleSheet("color: white; font: 14px;");
+
+    setMaximumSize(200, 400);
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Maximum);
 }
 
 PointInputWgt::PointInputWgt()
